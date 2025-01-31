@@ -13,7 +13,6 @@ const redIcon = new L.Icon({
 });
 
 const IncidentMap = ({ incidents }) => {
-  console.log(incidents);
   return (
     <MapContainer center={[0, 0]} zoom={2} style={{ height: '400px', width: '100%' }}>
       <TileLayer
