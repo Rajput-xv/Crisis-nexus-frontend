@@ -19,7 +19,7 @@ const IncidentMap = ({ incidents }) => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
-      {incidents.map(incident => (
+      {incidents?.map(incident => (
         <Marker
           key={incident.incidentId}
           position={[incident.incidentLocation.latitude, incident.incidentLocation.longitude]}

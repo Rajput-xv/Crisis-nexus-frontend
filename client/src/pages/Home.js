@@ -13,7 +13,7 @@ function Home() {
   const fetchIncidents = async () => {
     try {
       const response = await axios.get('/api/report/report');
-      setIncidents(response.data);
+      setIncidents(response?.data);
     } catch (error) {
       console.error('Error fetching incidents:', error);
     }
