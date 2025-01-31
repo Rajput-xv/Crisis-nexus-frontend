@@ -22,7 +22,7 @@ function DonationForm({ onDonationSuccess }) {
 
     try {
       // Proceed with donation using the current user's ID
-      const response = await axios.post('/api/donations', {
+      const response = await axios.post(process.env.REACT_APP_API_URL+'/api/donations', {
         donor: user._id, // current user's ID
         amount: parseFloat(amount), // Ensures amount is a number
         currency

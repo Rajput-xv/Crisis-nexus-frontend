@@ -12,7 +12,7 @@ function Resources() {
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const response = await axios.get('/api/resources');
+        const response = await axios.get(process.env.REACT_APP_API_URL+'/api/resources');
         setResources(response.data);
       } catch (error) {
         console.error('Error fetching resources:', error);
