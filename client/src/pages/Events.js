@@ -10,11 +10,11 @@ const Events = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await api.get('/events');
+        const response = await api.get('/api/events');
         setEvents(response.data);
 
         // Fetch registration status for each event
-        const statusResponse = await api.get('/user/registrations');
+        const statusResponse = await api.get('/api/user/registrations');
         const statusData = statusResponse.data.reduce((acc, eventId) => {
           acc[eventId] = true;
           return acc;
@@ -27,7 +27,7 @@ const Events = () => {
 
     const fetchUser = async () => {
       try {
-        const response = await api.get('/user');
+        const response = await api.get('/api/user');
         setUser(response.data);
       } catch (error) {
         console.error('Error fetching user:', error);
@@ -40,9 +40,9 @@ const Events = () => {
 
   const handleRegister = async (eventId) => {
     try {
-      await api.post(`/events/${eventId}/register`);
+      await api.post(`/api/events/${eventId}/register`);
       // Refresh events after registration
-      const response = await api.get('/events');
+      const response = await api.get('/api/events');
       setEvents(response.data);
       // Update registration status
       setRegistrationStatus((prevStatus) => ({

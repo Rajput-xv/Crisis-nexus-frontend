@@ -22,11 +22,11 @@ function Dashboard() {
     const fetchDashboardData = async () => {
       try {
         const [statsResponse, eventsResponse, registrationsResponse, donationsResponse, resourcesResponse] = await Promise.all([
-          api.get('/user/stat'), 
-          api.get('/events/latest'),
-          api.get('/user/registrations'),
-          api.get('/donations'),
-          api.get('/user/resources-donated')
+          api.get('/api/user/stat'), 
+          api.get('/api/events/latest'),
+          api.get('/api/user/registrations'),
+          api.get('/api/donations'),
+          api.get('/api/user/resources-donated')
         ]);
         
         setUserStats({

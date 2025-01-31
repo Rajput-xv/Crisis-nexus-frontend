@@ -16,7 +16,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      axios.get(process.env.REACT_APP_API_URL+'/auth/user', {
+      axios.get(process.env.REACT_APP_API_URL+'/api/auth/user', {
         headers: { Authorization: `Bearer ${token}` }
       }).then(response => {
         setUser(response.data);
@@ -32,9 +32,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    const response = await axios.post(process.env.REACT_APP_API_URL+'/auth/login', { email, password });
+    const response = await axios.post(process.env.REACT_APP_API_URL+'/api/auth/login', { email, password });
     localStorage.setItem('token', response.data.token);
-    const userResponse = await axios.get(process.env.REACT_APP_API_URL+'/auth/user', {
+    const userResponse = await axios.get(process.env.REACT_APP_API_URL+'/api/auth/user', {
       headers: { Authorization: `Bearer ${response.data.token}` }
     });
     setUser(userResponse.data);
