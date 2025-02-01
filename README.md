@@ -8,7 +8,6 @@ Welcome to the Crisis Nexus Platform, a cutting-edge solution designed to enhanc
 - [Project Overview](#project-overview)
 - [Setup Instructions](#setup-instructions)
 - [Environment Variables](#environment-variables)
-- [Backend Setup](#backend-setup)
 - [Frontend Setup](#frontend-setup)
 - [Running the Application](#running-the-application)
 - [License](#license)
