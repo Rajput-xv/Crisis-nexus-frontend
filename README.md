@@ -29,7 +29,7 @@ To get started with the Disaster Relief and Recovery Platform, follow these step
 3. Install dependencies.
 4. Start the application.
 
-## Setting Up Environment Variables
+## Environment Variables
 Create a `.env` file in the root directory of your project with the following content:
 
 MONGODB_URI=mongodb://localhost:27017/disaster_relief_db
@@ -43,13 +43,6 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
 Replace the placeholder values with your actual MongoDB connection string and generated JWT secret key.
 
-## Backend Setup
-Navigate to the server directory and run the following commands:
-```bash
-cd ./server
-npm install
-npm start
-```
 ## Frontend Setup
 Navigate to the client directory and run the following commands:
 ```bash
