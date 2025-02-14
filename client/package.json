@@ -1,5 +1,5 @@
 {
-  "proxy": "https://crisis-nexus-server.vercel.app/",
+  "proxy": "https://crisis-nexus-server.vercel.app", 
   "name": "client",
   "version": "1.0.0",
   "description": "",

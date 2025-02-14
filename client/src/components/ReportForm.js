@@ -36,7 +36,7 @@ const ReportForm = ({ onReportSubmitted }) => {
     formData.append('urgency', urgency);
 
     try {
-      await axios.post(process.env.REACT_APP_API_URL+'/api/report/report', formData);
+      await axios.post(process.env.REACT_APP_API_URL+'/api/report', formData);
       setSubmitted(true);
       onReportSubmitted(); // Call the function to fetch updated incidents
       setTimeout(() => setSubmitted(false), 3000);
