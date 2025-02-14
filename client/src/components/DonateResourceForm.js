@@ -28,7 +28,7 @@ const ResourceDonationForm = ({ onDonationSuccess }) => {
     }
 
     try {
-      const response = await axios.post(process.env.REACT_APP_API_URL+'/api/resources', {
+      const response = await axios.post(process.env.REACT_APP_API_URL+'api/resources', {
         item: selectedItem,
         quantity: parseInt(quantity, 10),
         donor: user._id // Include the current user's ID

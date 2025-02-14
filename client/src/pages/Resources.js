@@ -12,7 +12,7 @@ function Resources() {
   useEffect(() => {
     const fetchResources = async () => {
       try {
-        const response = await axios.get(process.env.REACT_APP_API_URL+'/api/resources');
+        const response = await axios.get(process.env.REACT_APP_API_URL+'api/resources');
         setResources(response.data);
       } catch (error) {
         console.error('Error fetching resources:', error);
@@ -58,16 +58,19 @@ function Resources() {
         {resources.map((resource) => (
           <Box key={resource._id} boxShadow={3} p={2} mb={2} borderRadius={4}>
             <ListItem>
-              <ListItemText
-                primary={resource.name}
-                secondary={
-                  <>
-                    <div><Typography variant="body2" component="span">Type: {resource.type}</Typography></div>
-                    <div><Typography variant="body2" component="span">Quantity: {resource.quantity}</Typography></div>
-                    <div><Typography variant="body2" component="span">Status: {resource.status}</Typography></div>
-                    <div><Typography variant="body2" component="span">Last Updated: {new Date(resource.lastUpdated).toLocaleString()}</Typography></div>
-                  </>
-                }
+            <ListItemText
+              primary={resource.name}
+              secondary={
+                <Box component="span">
+                  <Typography variant="body2" component="span">Type: {resource.type}</Typography>
+                  <br />
+                  <Typography variant="body2" component="span">Quantity: {resource.quantity}</Typography>
+                  <br />
+                  <Typography variant="body2" component="span">Status: {resource.status}</Typography>
+                  <br />
+                  <Typography variant="body2" component="span">Last Updated: {new Date(resource.lastUpdated).toLocaleString()}</Typography>
+                </Box>
+              }
               />
             </ListItem>
           </Box>

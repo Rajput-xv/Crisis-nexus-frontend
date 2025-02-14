@@ -25,18 +25,23 @@ const ReportForm = ({ onReportSubmitted }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append('incidentType', incidentType);
-    formData.append('otherIncident', otherIncident);
-    formData.append('incidentDate', incidentDate);
-    formData.append('incidentLocation', JSON.stringify(incidentLocation));
-    formData.append('incidentDescription', incidentDescription);
-    formData.append('affectedIndividuals', affectedIndividuals);
-    formData.append('incidentStatus', incidentStatus);
-    formData.append('urgency', urgency);
-
+    const reportData = {
+      incidentType,
+      otherIncident,
+      incidentDate,
+      incidentLocation: JSON.stringify(incidentLocation),
+      incidentDescription,
+      affectedIndividuals,
+      incidentStatus,
+      urgency
+    };
+  
     try {
-      await axios.post(process.env.REACT_APP_API_URL+'/api/report', formData);
+      await axios.post(process.env.REACT_APP_API_URL + 'api/report/', reportData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       setSubmitted(true);
       onReportSubmitted(); // Call the function to fetch updated incidents
       setTimeout(() => setSubmitted(false), 3000);
