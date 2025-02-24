@@ -15,13 +15,16 @@ const redIcon = new L.Icon({
 const HospitalMap = ({ hospitals = [] }) => {
     const defaultPosition = [23.259933, 77.412613]; // Default position (Bhopal)
 
+    // Ensure hospitals is an array before mapping
+    const hospitalList = Array.isArray(hospitals) ? hospitals : [];
+
     return (
         <MapContainer center={defaultPosition} zoom={13} style={{ height: "400px", width: "100%" }}>
             <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
-            {hospitals.map((hospital) => (
+            {hospitalList?.map((hospital) => (
                 <Marker
                     key={hospital.id}
                     position={[hospital.latitude, hospital.longitude]}
