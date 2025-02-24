@@ -24,6 +24,7 @@ function Hospital(){
     const fetchAllHospitals = async () => {
         try {
             const response = await axios.get(`api/hospital`);
+            console.log("Fetched all hospitals:", response.data); // Log the fetched data
             setAllHospitals(response.data); // Update the allHospitals state with the API response
         } catch (err) {
             console.error("Error fetching all hospitals:", err); // Log error for debugging
@@ -38,6 +39,7 @@ function Hospital(){
     
         try {
             const response = await axios.get(`api/hospital/${city}`);
+            console.log("Fetched hospitals for city:", city, response.data); // Log the fetched data
             setHospitals(response.data); // Update the hospital state with the API response
             setError(""); // Reset error if successful
         } catch (err) {
