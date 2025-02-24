@@ -12,7 +12,7 @@ const redIcon = new L.Icon({
     shadowSize: [41, 41]
 });
 
-const HospitalMap = ({ hospitals }) => {
+const HospitalMap = ({ hospitals = [] }) => {
     const defaultPosition = [23.259933, 77.412613]; // Default position (Bhopal)
 
     return (
