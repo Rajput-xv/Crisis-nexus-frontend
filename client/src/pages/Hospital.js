@@ -11,7 +11,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import axios from 'axios';
-import IncidentMap from '../components/IncidentMap';
+import HospitalMap from '../components/HospitalMap';
 
 function Hospital(){
     const [city, setCity] = useState(""); // City input state
@@ -123,7 +123,7 @@ function Hospital(){
                 )}
             </div>
             <h2>Hospital Map</h2>
-            <IncidentMap hospitals={hospitals} />
+            <HospitalMap hospitals={hospitals} />
         </Container>
     );
 }

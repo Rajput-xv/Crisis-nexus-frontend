@@ -12,16 +12,8 @@ const incidentIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Custom icon for hospital markers
-const hospitalIcon = new L.Icon({
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-red.png', // Use a red marker icon
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
 
-const IncidentMap = ({ incidents = [], hospitals = [] }) => {
+const IncidentMap = ({ incidents = []}) => {
   return (
     <MapContainer center={[0, 0]} zoom={2} style={{ height: '400px', width: '100%' }}>
       <TileLayer
@@ -38,21 +30,6 @@ const IncidentMap = ({ incidents = [], hospitals = [] }) => {
             <strong>{incident.incidentType}</strong><br />
             {incident.incidentLocation.address}<br />
             {new Date(incident.incidentDate).toLocaleDateString()}
-          </Popup>
-        </Marker>
-      ))}
-      {Array.isArray(hospitals) && hospitals.map(hospital => (
-        <Marker
-          key={hospital.id}
-          position={[hospital.latitude, hospital.longitude]}
-          icon={hospitalIcon}
-        >
-          <Popup>
-            <strong>{hospital.name}</strong><br />
-            {hospital.city}<br />
-            {hospital.pinCode}<br />
-            {hospital.phoneNumber}<br />
-            Rating: {hospital.rating} ⭐
           </Popup>
         </Marker>
       ))}

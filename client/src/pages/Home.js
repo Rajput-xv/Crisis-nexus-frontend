@@ -6,7 +6,6 @@ import Weather from '../components/Weather';
 
 function Home() {
   const [incidents, setIncidents] = useState([]);
-  const [hospitals, setHospitals] = useState([]); // Add state for hospitals
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [placeName, setPlaceName] = useState('');
@@ -20,14 +19,6 @@ function Home() {
     }
   };
 
-  const fetchHospitals = async () => {
-    try {
-      const response = await axios.get(process.env.REACT_APP_API_URL+'api/hospital');
-      setHospitals(response?.data);
-    } catch (error) {
-      console.error('Error fetching hospitals:', error);
-    }
-  };
 
   const fetchLocation = () => {
     if (navigator.geolocation) {
@@ -78,7 +69,6 @@ function Home() {
 
   useEffect(() => {
     fetchIncidents();
-    fetchHospitals(); // Fetch hospitals data
     fetchLocation();
   }, []);
 
@@ -104,7 +94,7 @@ function Home() {
       )}
 
       <h2>Incident Map</h2>
-      <IncidentMap incidents={incidents} hospitals={hospitals} /> {/* Pass hospitals data */}
+      <IncidentMap incidents={incidents} />
 
     </Container>
   );
