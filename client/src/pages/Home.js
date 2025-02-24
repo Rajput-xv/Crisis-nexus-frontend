@@ -19,7 +19,6 @@ function Home() {
     }
   };
 
-
   const fetchLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -90,12 +89,12 @@ function Home() {
           <h2>Weather Information</h2>
           <Typography variant="h6">Place Name: {placeName}</Typography>
           <Weather lat={latitude} lon={longitude} />
+          <>
+          <h2 style={{marginTop:'50px'}}>Incident Map</h2>
+          <IncidentMap incidents={incidents} latitude={latitude} longitude={longitude} />
+          </>
         </>
       )}
-
-      <h2>Incident Map</h2>
-      <IncidentMap incidents={incidents} />
-
     </Container>
   );
 }

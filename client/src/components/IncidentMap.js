@@ -1,5 +1,5 @@
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -12,26 +12,58 @@ const incidentIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
+// Custom icon for user location marker
+const userLocationIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 
-const IncidentMap = ({ incidents = []}) => {
+const SetViewOnClick = ({ coords }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (coords) {
+      map.setView(coords, 13);
+    }
+  }, [coords, map]);
+  return null;
+};
+
+const IncidentMap = ({ incidents = [], latitude = 0, longitude = 0 }) => {
+  const mapRef = useRef();
+
+  const centerCoords = latitude && longitude ? [latitude, longitude] : incidents.length > 0 ? [incidents[0].incidentLocation.latitude, incidents[0].incidentLocation.longitude] : [0, 0];
+
   return (
-    <MapContainer center={[0, 0]} zoom={2} style={{ height: '400px', width: '100%' }}>
+    <MapContainer center={centerCoords} zoom={13} style={{ height: '400px', width: '100%' }} ref={mapRef}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
-      {Array.isArray(incidents) && incidents.map(incident => (
-        <Marker
-          key={incident.incidentId}
-          position={[incident.incidentLocation.latitude, incident.incidentLocation.longitude]}
-          icon={incidentIcon}
-        >
+      <SetViewOnClick coords={centerCoords} />
+      {latitude && longitude && (
+        <Marker position={[latitude, longitude]} icon={userLocationIcon}>
           <Popup>
-            <strong>{incident.incidentType}</strong><br />
-            {incident.incidentLocation.address}<br />
-            {new Date(incident.incidentDate).toLocaleDateString()}
+            <strong>Your Location</strong>
           </Popup>
         </Marker>
+      )}
+      {Array.isArray(incidents) && incidents.map(incident => (
+        incident.incidentLocation.latitude !== undefined && incident.incidentLocation.longitude !== undefined && (
+          <Marker
+            key={incident.incidentId}
+            position={[incident.incidentLocation.latitude, incident.incidentLocation.longitude]}
+            icon={incidentIcon}
+          >
+            <Popup>
+              <strong>{incident.incidentType}</strong><br />
+              {incident.incidentLocation.address}<br />
+              {new Date(incident.incidentDate).toLocaleDateString()}
+            </Popup>
+          </Marker>
+        )
       ))}
     </MapContainer>
   );

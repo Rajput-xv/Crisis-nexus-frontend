@@ -19,8 +19,14 @@ const ReportIncident = () => {
     fetchIncidents();
   }, []);
 
+  // Filter incidents to include only those with valid coordinates
+  const validIncidents = incidents.filter(incident => 
+    incident.incidentLocation.latitude !== undefined && 
+    incident.incidentLocation.longitude !== undefined
+  );
+
   return (
-    <div>
+    <div style={{ width: '80%', center: 'center', margin: '0 auto' }}>
       <h1>Report an Incident</h1>
       <ReportForm onReportSubmitted={fetchIncidents} />
 
@@ -40,7 +46,7 @@ const ReportIncident = () => {
       </div>
 
       <h2>Incident Map</h2>
-      <IncidentMap incidents={incidents} />
+      <IncidentMap incidents={validIncidents} />
     </div>
   );
 };

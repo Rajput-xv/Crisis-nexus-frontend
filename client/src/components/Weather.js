@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Tabs, Tab, Typography } from '@mui/material';
+import { Box, Tabs, Tab, Typography, CircularProgress } from '@mui/material';
 import axios from 'axios';
 
 const Weather = ({ lat, lon }) => {
@@ -7,6 +7,7 @@ const Weather = ({ lat, lon }) => {
   const [weatherData, setWeatherData] = useState([]);
   const [selectedHour, setSelectedHour] = useState(0);
   const [selectedDateIndex, setSelectedDateIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const handleHourChange = (event, newValue) => {
     setSelectedHour(newValue);
@@ -14,11 +15,14 @@ const Weather = ({ lat, lon }) => {
 
   useEffect(() => {
     const fetchWeatherData = async () => {
+      setLoading(true);
       try {
         const response = await axios.get(process.env.REACT_APP_API_URL+`api/weather/${lat}/${lon}?type=${selectedTab}`);
         setWeatherData(response.data);
       } catch (error) {
         console.error('Error fetching weather data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -30,6 +34,10 @@ const Weather = ({ lat, lon }) => {
   };
 
   const renderWeatherData = () => {
+    if (loading) {
+      return <CircularProgress />;
+    }
+
     if (selectedTab === 'current' && weatherData.temperature !== undefined) {
       const currentDateTime = new Date().toLocaleString();
       return (
@@ -110,7 +118,7 @@ const Weather = ({ lat, lon }) => {
         </Box>
       );
     }
-    return <pre>{JSON.stringify(weatherData, null, 2)}</pre>;
+    return null;
   };
 
   return (
