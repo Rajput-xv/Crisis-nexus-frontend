@@ -14,6 +14,7 @@ function Navbar() {
         </Typography>
         <Button color="inherit" component={RouterLink} to="/">Home</Button>
         <Button color="inherit" component={RouterLink} to="/report">Report Incident</Button>
+        <Button color="inherit" component={RouterLink} to="/hospital">Hospitals</Button>
         {user ? (
           <>
             <Button color="inherit" component={RouterLink} to="/dashboard">Dashboard</Button>

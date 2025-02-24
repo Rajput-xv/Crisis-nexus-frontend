@@ -11,6 +11,7 @@ import Resources from './pages/Resources';
 import Events from './pages/Events';
 import IncidentReport from './pages/ReportIncident';
 import { AuthProvider } from './contexts/AuthContext';
+import Hospital from './pages/Hospital';
 import './App.css'; // Import the CSS file for styling
 
 const theme = createTheme({
@@ -33,6 +34,7 @@ function App() {
               <Route path="/resources" element={<Resources />} />
               <Route path="/events" element={<Events />} />
               <Route path="/report" element={<IncidentReport />} />
+              <Route path="/hospital" element={<Hospital />} />
             </Routes>
           </div>
           <Footer />
