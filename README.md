@@ -29,18 +29,12 @@ To get started with the Disaster Relief and Recovery Platform, follow these step
 4. Start the application.
 
 ## Environment Variables
-Create a `.env` file in the root directory of your project with the following content:
+Create a `.env` file in the client directory of your project with the following content:
 
-MONGODB_URI=mongodb://localhost:27017/disaster_relief_db
-
-JWT_SECRET=your_generated_jwt_secret_key_here
-
-
-Generate a JWT secret key using the following command in your terminal:
 ```bash
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+REACT_APP_API_URL=https://crisis-nexus-server.vercel.app/
+REACT_APP_GOOGLE_PLACES_API_KEY=Your_Api_Key
 ```
-Replace the placeholder values with your actual MongoDB connection string and generated JWT secret key.
 
 ## Frontend Setup
 Navigate to the client directory and run the following commands:
