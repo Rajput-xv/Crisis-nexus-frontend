@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Container, Card, CardContent, Button } from '@mui/material';
+import { Typography, Container, Card, CardContent, Button, Grid } from '@mui/material';
 import api from '../services/api';
+import '../css/Event.css';
 
 const Events = () => {
   const [events, setEvents] = useState([]);
@@ -55,32 +56,36 @@ const Events = () => {
   };
 
   return (
-    <Container>
-      <Typography variant="h4">Events</Typography>
-      {events.map((event) => {
-        const isRegistered = registrationStatus[event._id];
-        return (
-          <Card key={event._id} style={{ marginBottom: 16 }}>
-            <CardContent>
-              <Typography variant="h6">{event.title}</Typography>
-              <Typography variant="body2">{event.description}</Typography>
-              <Typography variant="body2">Type: {event.type}</Typography>
-              <Typography variant="body2">Date: {new Date(event.date).toLocaleDateString()}</Typography>
-              <Typography variant="body2">Location: {event.location.coordinates.join(', ')}</Typography>
-              <Typography variant="body2">Capacity: {event.capacity}</Typography>
-              <Typography variant="body2">Registered Participants: {event.registeredParticipants.length}</Typography>
-              <Button
-                variant="contained"
-                style={{ backgroundColor: isRegistered ? "green" : "#1976d2", color: "white" }} 
-                onClick={() => handleRegister(event._id)}
-                disabled={isRegistered}
-              >
-                {isRegistered ? "Registered" : "Register"}
-              </Button>
-            </CardContent>
-          </Card>
-        );
-      })}
+    <Container className="events-container">
+      <Typography variant="h4" className="events-title">Events</Typography>
+      <Grid container spacing={3}>
+        {events.map((event) => {
+          const isRegistered = registrationStatus[event._id];
+          return (
+            <Grid item xs={12} sm={6} key={event._id}>
+              <Card className="event-card">
+                <CardContent>
+                  <Typography variant="h6" className="event-title">{event.title}</Typography>
+                  <Typography variant="body2" className="event-description">{event.description}</Typography>
+                  <Typography variant="body2" className="event-info">Type: {event.type}</Typography>
+                  <Typography variant="body2" className="event-info">Date: {new Date(event.date).toLocaleDateString()}</Typography>
+                  <Typography variant="body2" className="event-info">Location: {event.location.coordinates.join(', ')}</Typography>
+                  <Typography variant="body2" className="event-info">Capacity: {event.capacity}</Typography>
+                  <Typography variant="body2" className="event-info">Registered Participants: {event.registeredParticipants.length}</Typography>
+                  <Button
+                    variant="contained"
+                    className={isRegistered ? "registered-button" : "register-button"} 
+                    onClick={() => handleRegister(event._id)}
+                    disabled={isRegistered}
+                  >
+                    {isRegistered ? "Registered" : "Register"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
+          );
+        })}
+      </Grid>
     </Container>
   );
 }

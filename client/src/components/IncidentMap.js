@@ -32,12 +32,10 @@ const SetViewOnClick = ({ coords }) => {
 };
 
 const IncidentMap = ({ incidents = [], latitude = 0, longitude = 0 }) => {
-  const mapRef = useRef();
-
   const centerCoords = (latitude !== 0 && longitude !== 0) ? [latitude, longitude] : (incidents.length > 0 ? [incidents[0].incidentLocation.latitude, incidents[0].incidentLocation.longitude] : [0, 0]);
 
   return (
-    <MapContainer center={centerCoords} zoom={13} style={{ height: '400px', width: '100%' }} ref={mapRef}>
+    <MapContainer center={centerCoords} zoom={13} style={{ height: '400px', width: '100%' }}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
