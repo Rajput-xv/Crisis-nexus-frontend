@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Container, TextField, List, ListItem, ListItemText, Card, CardContent, Button, Grid, CardMedia } from '@mui/material';
+import { Typography, Container, Grid, Card, CardContent, Button, CardMedia, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import IncidentMap from '../components/IncidentMap';
 import Weather from '../components/Weather';
 import { useAuth } from '../contexts/AuthContext';
+import ImgHome from '../css/home.jpg';
 
 function Home() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ function Home() {
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [placeName, setPlaceName] = useState('');
-
+  
   const fetchIncidents = async () => {
     try {
       const response = await axios.get(process.env.REACT_APP_API_URL + 'api/report');
@@ -92,67 +93,134 @@ function Home() {
   };
 
   return (
-    <Container>
-      <Typography variant="h2" gutterBottom style={{ marginTop: '20px' }}>
-        Welcome to Crisis Nexus
-      </Typography>
-      <Typography variant="body1">
-        Our platform helps coordinate disaster relief efforts, manage resources, and build community resilience.
-      </Typography>
+    <div>
+      {/* Hero Section */}
+      <Box 
+        sx={{
+          height: '100vh',
+          width: '100%',
+          position: 'relative',
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${ImgHome})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          color: 'white',
+        }}
+      >
+        <Container>
+          <Typography 
+            variant="h1" 
+            gutterBottom 
+            sx={{
+              fontWeight: 'bold',
+              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
+              mb: 4
+            }}
+          >
+            Welcome to Crisis Nexus
+          </Typography>
+          <Typography 
+            variant="h4"
+            sx={{
+              textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)',
+              mb: 4
+            }}
+          >
+            Our platform helps coordinate disaster relief efforts, manage resources, and build community resilience.
+          </Typography>
+        </Container>
+      </Box>
 
-      <div style={{ width: '100%', height: '500px', background: 'url("https://www.vuelio.com/uk/wp-content/uploads/2015/10/charity1.jpg") center/cover', margin: '20px 0' }} />
+      {/* Content Section */}
+      <Container sx={{ py: 8 }}>
+        <Grid container spacing={4} sx={{ mt: 0 }}>
+          <Grid item xs={12} sm={4}>
+            <Card sx={{ 
+              boxShadow: 6,
+              transition: 'transform 0.3s',
+              '&:hover': { transform: 'scale(1.03)' }
+            }}>
+              <CardMedia 
+                component="img" 
+                height="250" 
+                image="https://www.sine.co/wp-content/uploads/2022/02/Blog-Importance-of-effective-Incident-Reports.jpg" 
+                alt="Report Incident" 
+                sx={{ objectFit: 'cover' }}
+              />
+              <CardContent>
+                <Typography variant="h5" gutterBottom>Report Incident</Typography>
+                <Button variant="contained" color="primary" fullWidth onClick={() => navigate('/report')}>
+                  Report Now
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
 
-      <Grid container spacing={3} style={{ marginTop: '50px' }}>
-        <Grid item xs={12} sm={4}>
-          <Card style={{ boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)'}}>
-            <CardMedia component="img" height="250" image="https://www.sine.co/wp-content/uploads/2022/02/Blog-Importance-of-effective-Incident-Reports.jpg" alt="Report Incident" />
-            <CardContent>
-              <Typography variant="h5">Report Incident</Typography>
-              <Button variant="contained" color="primary" fullWidth style={{ marginTop: '10px' }} onClick={() => navigate('/report')}>
-                Report Now
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card style={{ boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)'}}>
-            <CardMedia component="img" height="250" image="https://static.vecteezy.com/system/resources/thumbnails/007/681/899/small/hospital-building-outside-composition-vector.jpg" alt="Find a Hospital" />
-            <CardContent>
-              <Typography variant="h5">Find a Hospital</Typography>
-              <Button variant="contained" color="secondary" fullWidth style={{ marginTop: '10px' }} onClick={() => navigate('/hospital')}>
+          <Grid item xs={12} sm={4}>
+            <Card sx={{ 
+              boxShadow: 6,
+              transition: 'transform 0.3s',
+              '&:hover': { transform: 'scale(1.03)' }
+            }}>
+              <CardMedia 
+                component="img" 
+                height="250" 
+                image="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1S5fFIEEAT_XGMedF_ra2w3eyGL8bKVqLRMet0MTQ1c-_cGA-GwpSRm9UdpZ2_U4rCzo&usqp=CAU" 
+                alt="Find Events" 
+                sx={{ objectFit: 'cover' }}
+              />
+              <CardContent>
+                <Typography variant="h5" gutterBottom>Report Incident</Typography>
+                <Button variant="contained" color="primary" fullWidth onClick={handleFindEventsClick}>
+                  View Events
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} sm={4}>
+            <Card sx={{ 
+              boxShadow: 6,
+              transition: 'transform 0.3s',
+              '&:hover': { transform: 'scale(1.03)' }
+            }}>
+              <CardMedia 
+                component="img" 
+                height="250" 
+                image="https://static.vecteezy.com/system/resources/thumbnails/007/681/899/small/hospital-building-outside-composition-vector.jpg" 
+                alt="Search Hospital" 
+                sx={{ objectFit: 'cover' }}
+              />
+              <CardContent>
+                <Typography variant="h5" gutterBottom>Search Hospital</Typography>
+                <Button variant="contained" color="primary" fullWidth onClick={() => navigate('/hospital')}>
                 Search Hospitals
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card style={{ boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.3)'}}>
-            <CardMedia component="img" height="250" image="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1S5fFIEEAT_XGMedF_ra2w3eyGL8bKVqLRMet0MTQ1c-_cGA-GwpSRm9UdpZ2_U4rCzo&usqp=CAU" alt="Find Events" />
-            <CardContent>
-              <Typography variant="h5">Find Events</Typography>
-              <Button variant="contained" color="success" fullWidth style={{ marginTop: '10px' }} onClick={handleFindEventsClick}>
-                View Events
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>          
 
-      {latitude && longitude && (
-        <>
-          <h2 style={{marginTop:'50px'}}>Weather Information</h2>
-          <Typography variant="h6">Place Name: {placeName}</Typography>
-          <Weather lat={latitude} lon={longitude} />
-        </>
-      )}
+        </Grid>
 
-      {latitude && longitude && (
-        <>
-          <h2 style={{ marginTop: '50px' }}>Incident Map</h2>
-          <IncidentMap incidents={incidents} latitude={latitude} longitude={longitude} />
-        </>
-      )}
-    </Container>
+        {latitude && longitude && (
+          <>
+            <Typography variant="h3" sx={{ mt: 8, mb: 4 }}>Weather Information</Typography>
+            <Typography variant="h6" sx={{ mb: 2 }}>Location: {placeName}</Typography>
+            <Weather lat={latitude} lon={longitude} />
+          </>
+        )}
+
+        {latitude && longitude && (
+          <>
+            <Typography variant="h3" sx={{ mt: 8, mb: 4 }}>Incident Map</Typography>
+            <IncidentMap incidents={incidents} latitude={latitude} longitude={longitude} />
+          </>
+        )}
+      </Container>
+    </div>
   );
 }
 
