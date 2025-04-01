@@ -125,7 +125,7 @@ function Register() {
     try {
       await axios.post(
         process.env.REACT_APP_API_URL + 'api/auth/verify-code',
-        { email, code: verificationCode }
+        { email, code: verificationCode } 
       );
       setIsEmailVerified(true);
     } catch (err) {
