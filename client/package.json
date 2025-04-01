@@ -25,6 +25,7 @@
     "cloudinary": "^1.21.0",
     "cors": "^2.8.5",
     "crypto-browserify": "^3.12.1",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "http-proxy-middleware": "^3.0.3",
     "json-parse-even-better-errors": "^4.0.0",

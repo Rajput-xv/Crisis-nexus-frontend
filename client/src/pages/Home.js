@@ -5,7 +5,7 @@ import axios from 'axios';
 import IncidentMap from '../components/IncidentMap';
 import Weather from '../components/Weather';
 import { useAuth } from '../contexts/AuthContext';
-import ImgHome from '../css/home.jpg';
+import ImgHome from '../assets/home.jpg';
 
 function Home() {
   const navigate = useNavigate();
@@ -97,7 +97,7 @@ function Home() {
       {/* Hero Section */}
       <Box 
         sx={{
-          height: '100vh',
+          height: '90vh',
           width: '100%',
           position: 'relative',
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${ImgHome})`,
