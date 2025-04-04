@@ -23,8 +23,11 @@ const userLocationIcon = new L.Icon({
 
 const HospitalMap = ({ hospitals = [], userLocation }) => {
     if (!userLocation?.latitude || !userLocation?.longitude) {
-        return <p>User location is not available.</p>;
+        return <div>User location is not available.</div>;
     }
+
+    // Filter hospitals with valid coordinates
+    const validHospitals = hospitals.filter(hospital => hospital.lat && hospital.lng);
 
     return (
         <MapContainer center={[userLocation.latitude, userLocation.longitude]} zoom={13} style={{ height: "400px", width: "100%" }}>
@@ -39,10 +42,10 @@ const HospitalMap = ({ hospitals = [], userLocation }) => {
                 </Popup>
             </Marker>
             {/* Hospital markers */}
-            {hospitals?.map((hospital, index) => (
+            {validHospitals?.map((hospital, index) => (
                 <Marker
                     key={index}
-                    position={[hospital.latitude, hospital.longitude]} // Ensure latitude and longitude are available
+                    position={[hospital.lat, hospital.lng]} // Use lat and lng from the back-end
                     icon={redIcon}
                 >
                     <Popup>

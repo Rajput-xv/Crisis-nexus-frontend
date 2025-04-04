@@ -69,24 +69,35 @@ const HospitalItem = styled(ListItem)(({ theme }) => ({
 function Hospital() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [hospitals, setHospitals] = useState([]);
+  const [hospitals, setHospitals] = useState(() => {
+    const savedHospitals = localStorage.getItem('hospitals');
+    return savedHospitals ? JSON.parse(savedHospitals) : [];
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { location } = uselocation(); // Access location from context
+  const { location, setLocation } = uselocation(); // Access location from context
 
   useEffect(() => {
-    let isMounted = true; // Flag to track if the component is mounted
+    const savedLocation = localStorage.getItem('location');
+    if (savedLocation) {
+      setLocation(JSON.parse(savedLocation));
+    }
+  }, [setLocation]);
+
+  useEffect(() => {
+    let isMounted = true;
 
     const fetchNearbyHospitals = async (latitude, longitude) => {
       try {
         setLoading(true);
-        const response = await fetch(process.env.REACT_APP_API_URL+`api/hospital/nearby?lat=${latitude}&lng=${longitude}`);
+        const response = await fetch(process.env.REACT_APP_API_URL + `api/hospital/nearby?lat=${latitude}&lng=${longitude}`);
         if (!response.ok) {
           throw new Error('Failed to fetch hospitals.');
         }
         const data = await response.json();
         if (isMounted) {
           setHospitals(data.places);
+          localStorage.setItem('hospitals', JSON.stringify(data.places)); // Save to localStorage
           setError(null);
         }
       } catch (err) {
@@ -101,11 +112,12 @@ function Hospital() {
     };
 
     if (location?.latitude && location?.longitude) {
+      localStorage.setItem('location', JSON.stringify(location)); // Save location to localStorage
       fetchNearbyHospitals(location.latitude, location.longitude);
     }
 
     return () => {
-      isMounted = false; // Cleanup: prevent state updates after unmount
+      isMounted = false;
     };
   }, [location]);
 
@@ -169,37 +181,63 @@ function Hospital() {
             <List>
               {hospitals.map((hospital, index) => (
                 <HospitalItem key={index}>
-                  <ListItemText
-                    primary={
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                        {hospital.name}
-                      </Typography>
-                    }
-                    secondary={
-                      <Box component="div">
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <ListItemText
+                  primary={
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                      {hospital.name}
+                    </Typography>
+                  }
+                  secondary={
+                    <Box component="div">
+                      <Box 
+                        sx={{ 
+                          display: 'flex', 
+                          flexWrap: 'wrap', 
+                          alignItems: 'center', 
+                          gap: 1, 
+                          mb: 1 
+                        }}
+                      >
+                        <Chip
+                          icon={<LocationOnIcon fontSize="small" />}
+                          label={
+                            <Typography 
+                              variant="body2" 
+                              sx={{ 
+                                wordWrap: 'break-word', 
+                                whiteSpace: 'normal', // Allow text to wrap
+                                overflow: 'hidden', 
+                                textOverflow: 'ellipsis', 
+                                maxWidth: { xs: '100%', sm: '250px', md: '100%' }, 
+                                lineHeight: 1.5 
+                              }}
+                            >
+                              {hospital.address}
+                            </Typography>
+                          }
+                          variant="outlined"
+                          size="medium" // Use medium size for better spacing
+                          sx={{
+                            height: 'auto', // Allow dynamic height
+                            padding: '8px', // Add padding for better appearance
+                          }}
+                        />
+                        {hospital.website && (
                           <Chip
-                            icon={<LocationOnIcon fontSize="small" />}
-                            label={hospital.address}
+                            label="Visit Website"
+                            component="a"
+                            href={hospital.website}
+                            target="_blank"
+                            clickable
                             variant="outlined"
                             size="small"
                           />
-                          {hospital.website && (
-                            <Chip
-                              label="Visit Website"
-                              component="a"
-                              href={hospital.website}
-                              target="_blank"
-                              clickable
-                              variant="outlined"
-                              size="small"
-                            />
-                          )}
-                        </Box>
+                        )}
                       </Box>
-                    }
-                  />
-                </HospitalItem>
+                    </Box>
+                  }
+                />
+              </HospitalItem>
               ))}
             </List>
           </Box>
