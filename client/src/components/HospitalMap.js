@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Custom red marker icon
+// Custom red marker icon for hospitals
 const redIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
     iconSize: [25, 41],
@@ -12,30 +12,47 @@ const redIcon = new L.Icon({
     shadowSize: [41, 41]
 });
 
-const HospitalMap = ({ hospitals = [] }) => {
-    const defaultPosition = [23.259933, 77.412613]; // Default position (Bhopal)
+// Custom blue marker icon for the user's location
+const userLocationIcon = new L.Icon({
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
 
-    // Ensure hospitals is an array before mapping
-    const hospitalList = Array.isArray(hospitals) ? hospitals : [];
+const HospitalMap = ({ hospitals = [], userLocation }) => {
+    if (!userLocation?.latitude || !userLocation?.longitude) {
+        return <p>User location is not available.</p>;
+    }
 
     return (
-        <MapContainer center={defaultPosition} zoom={13} style={{ height: "400px", width: "100%" }}>
+        <MapContainer center={[userLocation.latitude, userLocation.longitude]} zoom={13} style={{ height: "400px", width: "100%" }}>
             <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
-            {hospitalList?.map((hospital) => (
+            {/* User's current location marker */}
+            <Marker position={[userLocation.latitude, userLocation.longitude]} icon={userLocationIcon}>
+                <Popup>
+                    <strong>Your Location</strong>
+                </Popup>
+            </Marker>
+            {/* Hospital markers */}
+            {hospitals?.map((hospital, index) => (
                 <Marker
-                    key={hospital.id}
-                    position={[hospital.latitude, hospital.longitude]}
+                    key={index}
+                    position={[hospital.latitude, hospital.longitude]} // Ensure latitude and longitude are available
                     icon={redIcon}
                 >
                     <Popup>
                         <strong>{hospital.name}</strong><br />
-                        {hospital.city}<br />
-                        {hospital.pinCode}<br />
-                        {hospital.phoneNumber}<br />
-                        Rating: {hospital.rating} ⭐
+                        {hospital.address}<br />
+                        {hospital.website && (
+                            <a href={hospital.website} target="_blank" rel="noopener noreferrer">
+                                Visit Website
+                            </a>
+                        )}
                     </Popup>
                 </Marker>
             ))}

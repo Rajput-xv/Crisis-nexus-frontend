@@ -12,7 +12,8 @@ import Events from './pages/Events';
 import IncidentReport from './pages/ReportIncident';
 import { AuthProvider } from './contexts/AuthContext';
 import Hospital from './pages/Hospital';
-import './App.css'; // Import the CSS file for styling
+import './App.css'; 
+import { LocationProvider } from './contexts/LocationContext';
 
 const theme = createTheme({
   // Customize your theme here
@@ -23,22 +24,24 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <div className="app-container">
-          <Navbar />
-          <div className="content-wrap">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/resources" element={<Resources />} />
-              <Route path="/events" element={<Events />} />
-              <Route path="/report" element={<IncidentReport />} />
-              <Route path="/hospital" element={<Hospital />} />
-            </Routes>
+        <LocationProvider>
+          <div className="app-container">
+            <Navbar />
+            <div className="content-wrap">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/resources" element={<Resources />} />
+                <Route path="/events" element={<Events />} />
+                <Route path="/report" element={<IncidentReport />} />
+                <Route path="/hospital" element={<Hospital />} />
+              </Routes>
+            </div>
+            <Footer />
           </div>
-          <Footer />
-        </div>
+        </LocationProvider>
       </AuthProvider>
     </ThemeProvider>
   );

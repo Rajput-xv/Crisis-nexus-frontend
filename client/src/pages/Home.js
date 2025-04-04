@@ -6,15 +6,15 @@ import IncidentMap from '../components/IncidentMap';
 import Weather from '../components/Weather';
 import { useAuth } from '../contexts/AuthContext';
 import ImgHome from '../assets/home.jpg';
+import { uselocation } from '../contexts/LocationContext';
 
 function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [incidents, setIncidents] = useState([]);
-  const [latitude, setLatitude] = useState(null);
-  const [longitude, setLongitude] = useState(null);
   const [placeName, setPlaceName] = useState('');
-  
+  const { location, setLocation } = uselocation(); // Access location from context
+
   const fetchIncidents = async () => {
     try {
       const response = await axios.get(process.env.REACT_APP_API_URL + 'api/report');
@@ -28,15 +28,15 @@ function Home() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLatitude(position.coords.latitude);
-          setLongitude(position.coords.longitude);
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
         },
-        () => {
-          console.error('Geolocation is not supported by this browser.');
+        (error) => {
+          console.error("Error fetching location:", error);
         }
       );
-    } else {
-      console.error('Geolocation is not supported by this browser.');
     }
   };
 
@@ -74,15 +74,15 @@ function Home() {
   };
 
   useEffect(() => {
-    fetchIncidents();
     fetchLocation();
+    fetchIncidents();
   }, []);
 
   useEffect(() => {
-    if (latitude && longitude) {
-      fetchPlaceName(latitude, longitude);
+    if (location?.latitude && location?.longitude) {
+      fetchPlaceName(location.latitude, location.longitude);
     }
-  }, [latitude, longitude]);
+  }, [location]);
 
   const handleFindEventsClick = () => {
     if (user) {
@@ -173,7 +173,7 @@ function Home() {
                 sx={{ objectFit: 'cover' }}
               />
               <CardContent>
-                <Typography variant="h5" gutterBottom>Report Incident</Typography>
+                <Typography variant="h5" gutterBottom>Find Events</Typography>
                 <Button variant="contained" color="primary" fullWidth onClick={handleFindEventsClick}>
                   View Events
                 </Button>
@@ -202,21 +202,20 @@ function Home() {
               </CardContent>
             </Card>
           </Grid>          
-
         </Grid>
 
-        {latitude && longitude && (
+        {location?.latitude && location?.longitude && (
           <>
             <Typography variant="h3" sx={{ mt: 8, mb: 4 }}>Weather Information</Typography>
             <Typography variant="h6" sx={{ mb: 2 }}>Location: {placeName}</Typography>
-            <Weather lat={latitude} lon={longitude} />
+            <Weather lat={location.latitude} lon={location.longitude} />
           </>
         )}
 
-        {latitude && longitude && (
+        {location?.latitude && location?.longitude && (
           <>
             <Typography variant="h3" sx={{ mt: 8, mb: 4 }}>Incident Map</Typography>
-            <IncidentMap incidents={incidents} latitude={latitude} longitude={longitude} />
+            <IncidentMap incidents={incidents} latitude={location.latitude} longitude={location.longitude} />
           </>
         )}
       </Container>
