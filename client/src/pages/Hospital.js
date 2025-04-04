@@ -74,28 +74,39 @@ function Hospital() {
   const [loading, setLoading] = useState(false);
   const { location } = uselocation(); // Access location from context
 
-  const fetchNearbyHospitals = async (latitude, longitude) => {
-    setError("");
-    setHospitals([]);
-    setLoading(true);
-
-    try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}api/hospital/nearby`, {
-            params: { latitude, longitude },
-        });
-        setHospitals(response.data.places); // Using `places` from the backend response
-    } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch nearby hospitals");
-        setHospitals([]);
-    } finally {
-        setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (location) {
+    let isMounted = true; // Flag to track if the component is mounted
+
+    const fetchNearbyHospitals = async (latitude, longitude) => {
+      try {
+        setLoading(true);
+        const response = await fetch(process.env.REACT_APP_API_URL+`api/hospital/nearby?lat=${latitude}&lng=${longitude}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch hospitals.');
+        }
+        const data = await response.json();
+        if (isMounted) {
+          setHospitals(data.places);
+          setError(null);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError('Failed to fetch hospitals.');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    if (location?.latitude && location?.longitude) {
       fetchNearbyHospitals(location.latitude, location.longitude);
     }
+
+    return () => {
+      isMounted = false; // Cleanup: prevent state updates after unmount
+    };
   }, [location]);
 
   return (
@@ -156,40 +167,40 @@ function Hospital() {
               {hospitals.length} Hospitals Found Nearby
             </Typography>
             <List>
-                {hospitals.map((hospital, index) => (
-                    <HospitalItem key={index}>
-                        <ListItemText
-                            primary={
-                                <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                                    {hospital.name}
-                                </Typography>
-                            }
-                            secondary={
-                                <Box component="div">
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                        <Chip
-                                            icon={<LocationOnIcon fontSize="small" />}
-                                            label={hospital.address}
-                                            variant="outlined"
-                                            size="small"
-                                        />
-                                        {hospital.website && (
-                                            <Chip
-                                                label="Visit Website"
-                                                component="a"
-                                                href={hospital.website}
-                                                target="_blank"
-                                                clickable
-                                                variant="outlined"
-                                                size="small"
-                                            />
-                                        )}
-                                    </Box>
-                                </Box>
-                            }
-                        />
-                    </HospitalItem>
-                ))}
+              {hospitals.map((hospital, index) => (
+                <HospitalItem key={index}>
+                  <ListItemText
+                    primary={
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                        {hospital.name}
+                      </Typography>
+                    }
+                    secondary={
+                      <Box component="div">
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                          <Chip
+                            icon={<LocationOnIcon fontSize="small" />}
+                            label={hospital.address}
+                            variant="outlined"
+                            size="small"
+                          />
+                          {hospital.website && (
+                            <Chip
+                              label="Visit Website"
+                              component="a"
+                              href={hospital.website}
+                              target="_blank"
+                              clickable
+                              variant="outlined"
+                              size="small"
+                            />
+                          )}
+                        </Box>
+                      </Box>
+                    }
+                  />
+                </HospitalItem>
+              ))}
             </List>
           </Box>
         )
@@ -214,12 +225,15 @@ function Hospital() {
           {/* Pass valid location to HospitalMap */}
           {location?.latitude && location?.longitude ? (
             <HospitalMap 
-                hospitals={hospitals} 
-                userLocation={location} 
+              hospitals={hospitals} 
+              userLocation={{
+                latitude: parseFloat(location.latitude), // Ensure valid numbers
+                longitude: parseFloat(location.longitude),
+              }} 
             />
           ) : (
             <Typography variant="body1" color="textSecondary">
-                Unable to fetch user location. Please enable location services.
+              Unable to fetch user location. Please enable location services.
             </Typography>
           )}
         </MapContainer>
