@@ -88,38 +88,37 @@ function Hospital() {
     let isMounted = true;
 
     const fetchNearbyHospitals = async (latitude, longitude) => {
-      try {
-        setLoading(true);
-        const response = await fetch(process.env.REACT_APP_API_URL + `api/hospital/nearby?lat=${latitude}&lng=${longitude}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch hospitals.');
+        try {
+            setLoading(true);
+            const response = await axios.get(`${process.env.REACT_APP_API_URL}api/hospital/nearby`, {
+                params: { lat: latitude, lng: longitude } // Send lat and lng as query parameters
+            });
+            if (isMounted) {
+                const data = response.data;
+                setHospitals(data.places); // Use the refined `places` array from the backend
+                localStorage.setItem('hospitals', JSON.stringify(data.places)); // Save to localStorage
+                setError(null);
+            }
+        } catch (err) {
+            if (isMounted) {
+                setError('Failed to fetch hospitals.');
+            }
+        } finally {
+            if (isMounted) {
+                setLoading(false);
+            }
         }
-        const data = await response.json();
-        if (isMounted) {
-          setHospitals(data.places);
-          localStorage.setItem('hospitals', JSON.stringify(data.places)); // Save to localStorage
-          setError(null);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError('Failed to fetch hospitals.');
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
     };
 
     if (location?.latitude && location?.longitude) {
-      localStorage.setItem('location', JSON.stringify(location)); // Save location to localStorage
-      fetchNearbyHospitals(location.latitude, location.longitude);
+        localStorage.setItem('location', JSON.stringify(location)); // Save location to localStorage
+        fetchNearbyHospitals(location.latitude, location.longitude);
     }
 
     return () => {
-      isMounted = false;
+        isMounted = false;
     };
-  }, [location]);
+}, [location]);
 
   return (
     <StyledContainer maxWidth="lg">
