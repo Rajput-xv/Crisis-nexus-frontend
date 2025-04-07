@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { TextField, Button, Container, Typography, Select, MenuItem } from '@mui/material';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext'; // Import the useAuth hook
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 
 function DonationForm({ onDonationSuccess }) {
   const { user } = useAuth(); // Get the current user from the authentication context
+  const navigate = useNavigate(); // Use the useNavigate hook for navigation
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState('INR');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const currencies = [
     { code: 'INR', label: 'Indian Rupee (₹)' },
@@ -19,16 +22,22 @@ function DonationForm({ onDonationSuccess }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
+    setSuccessMessage('');
 
     try {
       // Proceed with donation using the current user's ID
       const response = await axios.post(process.env.REACT_APP_API_URL+'api/donations', {
         donor: user._id, // current user's ID
         amount: parseFloat(amount), // Ensures amount is a number
-        currency
+        currency,
+        createdAt: new Date().toISOString() // Add createdAt field
       });
       
       onDonationSuccess(response.data);
+      setSuccessMessage('Donation successful! Thank you for your generosity.');
+      setTimeout(() => {
+        navigate('/dashboard'); // Redirect to the home page after 3 seconds
+      }, 3000); // Redirect after 3 seconds
     } catch (error) {
       setError('Error processing donation');
       console.error('Error making donation:', error);

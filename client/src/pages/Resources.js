@@ -43,7 +43,7 @@ function Resources() {
   }, []);
 
   const handleDonationSuccess = (donation) => {
-    console.log('Donation successful:', donation);
+    // console.log('Donation successful:', donation);
     setShowDonationForm(false);
     setShowResourceDonationForm(false);
     // Update the resources list after a successful donation
@@ -172,12 +172,16 @@ function Resources() {
                     />
                   </Grid>
                   <Grid item xs={6}>
-                    <Chip
-                      icon={<UpdateIcon />}
-                      label={format(new Date(resource.lastUpdated), 'dd MMM yyyy')}
-                      variant="outlined"
-                      size="small"
-                    />
+                  <Chip
+                    icon={<UpdateIcon />}
+                    label={
+                      resource.lastUpdated
+                        ? format(new Date(resource.lastUpdated), 'dd MMM yyyy')
+                        : 'N/A' // Fallback value if lastUpdated is invalid
+                    }
+                    variant="outlined"
+                    size="small"
+                  />
                   </Grid>
                 </Grid>
 

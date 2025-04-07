@@ -46,7 +46,7 @@ function Dashboard() {
           api.get('api/user/stat'), 
           api.get('api/events/latest'),
           api.get('api/user/registrations'),
-          api.get('api/donations'),
+          api.get(`api/donations?userId=${user._id}`),
           api.get('api/user/resources-donated')
         ]);
         
@@ -54,7 +54,7 @@ function Dashboard() {
           ...statsResponse.data,
           eventsAttended: registrationsResponse.data.length,
           totalDonations: donationsResponse.data.reduce((total, donation) => total + donation.amount, 0),
-          currency: donationsResponse.data.length > 0 ? donationsResponse.data[0].currency : 'USD', // Set currency from donations
+          currency: donationsResponse.data.length > 0 ? donationsResponse.data[0].currency : 'INR', // Set currency from donations
           resourcesContributed: resourcesResponse.data.totalQuantity
         });
         setLatestEvents(eventsResponse.data.slice(0, 5)); // Limit to top 5 latest events
