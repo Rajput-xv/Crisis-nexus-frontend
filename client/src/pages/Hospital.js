@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Container,
   Typography,
@@ -25,7 +25,7 @@ import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import SearchIcon from '@mui/icons-material/Search';
-import { uselocation } from '../contexts/LocationContext';
+import { useLocation } from '../contexts/LocationContext';
 
 const StyledContainer = styled(Container)(({ theme }) => ({
   paddingTop: theme.spacing(6),
@@ -90,10 +90,15 @@ function Hospital() {
   const [selectedHospital, setSelectedHospital] = useState(null);
   const [searchCity, setSearchCity] = useState("");
   const [searchMode, setSearchMode] = useState(false); // false = location-based, true = city-based
-  const { location, setLocation } = uselocation(); // Access location from context
+  const { location, setLocation } = useLocation(); // Access location from context
+
+  // Memoized function to prevent unnecessary re-renders in child components
+  const handleSetNearestHospital = useCallback((hospital) => {
+    setNearestHospital(hospital);
+  }, []);
 
   // Function to handle hospital selection and scroll to map
-  const handleHospitalSelect = (hospital) => {
+  const handleHospitalSelect = useCallback((hospital) => {
     setSelectedHospital(hospital);
     
     // Scroll to map component with smooth animation
@@ -106,7 +111,7 @@ function Hospital() {
         });
       }
     }, 100); // Small delay to ensure state update
-  };
+  }, []); // No dependencies needed since it only sets state
 
   // Function to search hospitals by city
   const handleCitySearch = async () => {
@@ -123,6 +128,11 @@ function Hospital() {
       setSelectedHospital(null);
       setNearestHospital(null);
       setHospitals([]); // Clear hospitals to trigger route clearing
+      
+      // Clear any cached data that might persist
+      localStorage.removeItem('hospitals');
+      localStorage.removeItem('nearestHospital');
+      localStorage.removeItem('selectedHospital');
       
       // Force a small delay to ensure route clearing
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -172,12 +182,14 @@ function Hospital() {
     localStorage.removeItem('searchCity');
     localStorage.removeItem('hospitals');
     
+    // Clear any cached data that might persist
+    localStorage.removeItem('nearestHospital');
+    localStorage.removeItem('selectedHospital');
+    
     // Trigger location-based search after clearing
     if (location?.latitude && location?.longitude) {
-      // Small delay to ensure state is cleared before refetching
-      setTimeout(() => {
-        setHospitals([]); // This will trigger the useEffect to refetch
-      }, 150);
+      // The useEffect will automatically refetch when searchMode becomes false
+      // No need to manually set hospitals to empty array again
     }
   };
 
@@ -187,17 +199,22 @@ function Hospital() {
       // Set nearest hospital in both location and city search modes
       const nearest = hospitals[0];
       setNearestHospital(nearest);
-      
-      // Check if current selectedHospital is still in the new hospitals array
-      if (selectedHospital && !hospitals.some(hospital => hospital.name === selectedHospital.name)) {
-        setSelectedHospital(null); // Clear selection if hospital is not in current array
-      }
     } else {
       // Clear nearest hospital when no hospitals
       setNearestHospital(null);
       setSelectedHospital(null); // Also clear selected hospital
     }
-  }, [hospitals, selectedHospital]);
+  }, [hospitals]); // Only depend on hospitals array
+
+  // Separate effect to check if selected hospital is still valid
+  useEffect(() => {
+    if (hospitals.length > 0 && selectedHospital) {
+      // Check if current selectedHospital is still in the new hospitals array
+      if (!hospitals.some(hospital => hospital.name === selectedHospital.name)) {
+        setSelectedHospital(null); // Clear selection if hospital is not in current array
+      }
+    }
+  }, [hospitals, selectedHospital]); // Include selectedHospital in dependencies
 
   useEffect(() => {
     const savedLocation = localStorage.getItem('location');
@@ -561,7 +578,7 @@ function Hospital() {
               selectedHospital={selectedHospital}
               onHospitalSelect={handleHospitalSelect}
               searchMode={searchMode} // Pass search mode to trigger route clearing
-              setNearestHospital={setNearestHospital} // Pass function to set nearest hospital
+              setNearestHospital={handleSetNearestHospital} // Pass memoized function to set nearest hospital
             />
           ) : (
             <Typography variant="body1" color="textSecondary">

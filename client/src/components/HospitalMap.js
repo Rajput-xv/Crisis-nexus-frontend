@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -63,32 +63,47 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
         }
     }, [hospitals, setParentNearestHospital]);
 
-    // Clear routes when search mode changes
+    // Comprehensive route cleanup effect
     useEffect(() => {
-        if (routeLayer && mapRef.current) {
-            mapRef.current.removeLayer(routeLayer);
-            setRouteLayer(null);
-        }
-    }, [searchMode]);
+        // Clear route when:
+        // 1. Search mode changes
+        // 2. Hospitals array becomes empty
+        // 3. Selected hospital becomes null
+        // 4. Hospitals array changes completely
+        
+        const shouldClearRoute = (
+            hospitals.length === 0 || 
+            !selectedHospital ||
+            (hospitals.length > 0 && selectedHospital && !hospitals.some(h => h.name === selectedHospital.name))
+        );
 
-    // Clear routes when hospitals array becomes empty (for mode switching)
-    useEffect(() => {
-        if (hospitals.length === 0 && routeLayer && mapRef.current) {
-            mapRef.current.removeLayer(routeLayer);
-            setRouteLayer(null);
+        if (shouldClearRoute && routeLayer && mapRef.current) {
+            try {
+                mapRef.current.removeLayer(routeLayer);
+                setRouteLayer(null);
+            } catch (error) {
+                console.warn('Error removing route layer:', error);
+            }
         }
-    }, [hospitals.length]);
-
-    // Clear routes when selectedHospital becomes null
-    useEffect(() => {
-        if (!selectedHospital && routeLayer && mapRef.current) {
-            mapRef.current.removeLayer(routeLayer);
-            setRouteLayer(null);
+        
+        // Reset nearest hospital state when hospitals array becomes empty
+        if (hospitals.length === 0) {
+            setNearestHospital(null);
+            if (setParentNearestHospital) {
+                setParentNearestHospital(null);
+            }
         }
-    }, [selectedHospital]);
+    }, [searchMode, hospitals, selectedHospital, routeLayer, setParentNearestHospital]);
 
     // Function to draw route between two points
-    const drawRoute = async (startLat, startLng, endLat, endLng, isNearest = false) => {
+    const drawRoute = useCallback(async (startLat, startLng, endLat, endLng, isNearest = false) => {
+        // Validate coordinates
+        if (!startLat || !startLng || !endLat || !endLng || 
+            isNaN(startLat) || isNaN(startLng) || isNaN(endLat) || isNaN(endLng)) {
+            console.error('Invalid coordinates provided to drawRoute');
+            return;
+        }
+
         try {
             // Clear existing route first
             if (routeLayer && mapRef.current) {
@@ -100,6 +115,11 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
             const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
             
             const response = await fetch(osrmUrl);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const routeData = await response.json();
 
             if (routeData.routes && routeData.routes.length > 0 && mapRef.current) {
@@ -180,7 +200,7 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                 }, 1000);
             }
         }
-    };
+    }, [routeLayer]); // Only depend on routeLayer
 
     // Auto-select nearest hospital in both modes when hospitals are loaded
     useEffect(() => {
@@ -189,6 +209,16 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
             onHospitalSelect(nearestHospital);
         }
     }, [nearestHospital, userLocation, selectedHospital, onHospitalSelect]);
+
+    // Reset map view when search mode changes to prevent visual artifacts
+    useEffect(() => {
+        if (mapRef.current && userLocation) {
+            // Reset map view to user location when switching modes
+            setTimeout(() => {
+                mapRef.current.setView([userLocation.latitude, userLocation.longitude], 13);
+            }, 200);
+        }
+    }, [searchMode, userLocation]);
 
     // Draw route to selected hospital when it changes (works in both modes)
     useEffect(() => {
@@ -201,12 +231,8 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                 selectedHospital.lng,
                 isNearest
             );
-        } else if (!selectedHospital && routeLayer && mapRef.current) {
-            // Clear route when no hospital is selected
-            mapRef.current.removeLayer(routeLayer);
-            setRouteLayer(null);
         }
-    }, [selectedHospital, userLocation, nearestHospital]);
+    }, [selectedHospital, userLocation, nearestHospital, drawRoute]); // Added drawRoute dependency
 
     // Handle hospital marker click
     const handleHospitalClick = (hospital) => {
@@ -214,6 +240,20 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
             onHospitalSelect(hospital); // Update selected hospital in parent component
         }
     };
+
+    // Cleanup effect for component unmounting
+    useEffect(() => {
+        return () => {
+            // Clean up route layer when component unmounts
+            if (routeLayer && mapRef.current) {
+                try {
+                    mapRef.current.removeLayer(routeLayer);
+                } catch (error) {
+                    console.warn('Error cleaning up route layer:', error);
+                }
+            }
+        };
+    }, [routeLayer]);
 
     return (
         <MapContainer 
@@ -281,7 +321,7 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
 
                 return (
                     <Marker
-                        key={index}
+                        key={hospital.name || hospital.id || `hospital-${index}`} // Better unique key
                         position={[hospital.lat, hospital.lng]}
                         icon={hospitalIcon}
                         eventHandlers={{
