@@ -6,14 +6,14 @@ import IncidentMap from '../components/IncidentMap';
 import Weather from '../components/Weather';
 import { useAuth } from '../contexts/AuthContext';
 import ImgHome from '../assets/home.jpg';
-import { uselocation } from '../contexts/LocationContext';
+import { useLocation } from '../contexts/LocationContext';
 
 function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [incidents, setIncidents] = useState([]);
   const [placeName, setPlaceName] = useState('');
-  const { location, setLocation } = uselocation(); // Access location from context
+  const { location, setLocation } = useLocation(); // Access location from context
 
   const fetchIncidents = async () => {
     try {
