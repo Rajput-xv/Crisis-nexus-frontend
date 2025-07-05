@@ -12,6 +12,10 @@ import {
   useTheme,
   Box,
   Chip,
+  Button,
+  Stack,
+  Card,
+  CardContent,
 } from "@mui/material";
 import axios from 'axios';
 import HospitalMap from '../components/HospitalMap';
@@ -20,6 +24,8 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import PhoneIcon from '@mui/icons-material/Phone';
 import StarRateIcon from '@mui/icons-material/StarRate';
+import DirectionsIcon from '@mui/icons-material/Directions';
+import NearMeIcon from '@mui/icons-material/NearMe';
 import { uselocation } from '../contexts/LocationContext';
 
 const StyledContainer = styled(Container)(({ theme }) => ({
@@ -66,6 +72,12 @@ const HospitalItem = styled(ListItem)(({ theme }) => ({
   },
 }));
 
+const RouteControlCard = styled(Card)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
+  backgroundColor: theme.palette.background.paper,
+  boxShadow: theme.shadows[2],
+}));
+
 function Hospital() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -75,7 +87,49 @@ function Hospital() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [nearestHospital, setNearestHospital] = useState(null);
   const { location, setLocation } = uselocation(); // Access location from context
+
+  // Calculate distance between two points using Haversine formula
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Radius of the Earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distance in km
+  };
+
+  // Find nearest hospital when hospitals or location changes
+  useEffect(() => {
+    if (hospitals.length > 0 && location?.latitude && location?.longitude) {
+      let nearest = hospitals[0];
+      let minDistance = calculateDistance(
+        location.latitude, 
+        location.longitude, 
+        nearest.lat, 
+        nearest.lng
+      );
+
+      hospitals.forEach(hospital => {
+        const distance = calculateDistance(
+          location.latitude, 
+          location.longitude, 
+          hospital.lat, 
+          hospital.lng
+        );
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearest = hospital;
+        }
+      });
+
+      setNearestHospital(nearest);
+    }
+  }, [hospitals, location]);
 
   useEffect(() => {
     const savedLocation = localStorage.getItem('location');
@@ -178,66 +232,105 @@ function Hospital() {
               {hospitals.length} Hospitals Found Nearby
             </Typography>
             <List>
-              {hospitals.map((hospital, index) => (
-                <HospitalItem key={index}>
-                <ListItemText
-                  primary={
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                      {hospital.name}
-                    </Typography>
-                  }
-                  secondary={
-                    <Box component="div">
-                      <Box 
-                        sx={{ 
-                          display: 'flex', 
-                          flexWrap: 'wrap', 
-                          alignItems: 'center', 
-                          gap: 1, 
-                          mb: 1 
+              {hospitals.map((hospital, index) => {
+                const isNearest = nearestHospital && hospital.name === nearestHospital.name;
+                const distance = location ? calculateDistance(
+                  location.latitude, 
+                  location.longitude, 
+                  hospital.lat, 
+                  hospital.lng
+                ).toFixed(1) : null;
+
+                return (
+                  <HospitalItem key={index} sx={{ 
+                    border: isNearest ? '2px solid #4CAF50' : 'none',
+                    position: 'relative'
+                  }}>
+                    {isNearest && (
+                      <Chip
+                        label="NEAREST"
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          backgroundColor: '#4CAF50',
+                          color: 'white',
+                          fontWeight: 'bold',
+                          fontSize: '0.7rem'
                         }}
-                      >
-                        <Chip
-                          icon={<LocationOnIcon fontSize="small" />}
-                          label={
-                            <Typography 
-                              variant="body2" 
-                              sx={{ 
-                                wordWrap: 'break-word', 
-                                whiteSpace: 'normal', // Allow text to wrap
-                                overflow: 'hidden', 
-                                textOverflow: 'ellipsis', 
-                                maxWidth: { xs: '100%', sm: '250px', md: '100%' }, 
-                                lineHeight: 1.5 
+                      />
+                    )}
+                    <ListItemText
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {hospital.name}
+                          </Typography>
+                          {distance && (
+                            <Chip
+                              icon={<DirectionsIcon fontSize="small" />}
+                              label={`${distance} km`}
+                              size="small"
+                              variant="outlined"
+                              color={isNearest ? "success" : "default"}
+                            />
+                          )}
+                        </Box>
+                      }
+                      secondary={
+                        <Box component="div">
+                          <Box 
+                            sx={{ 
+                              display: 'flex', 
+                              flexWrap: 'wrap', 
+                              alignItems: 'center', 
+                              gap: 1, 
+                              mb: 1 
+                            }}
+                          >
+                            <Chip
+                              icon={<LocationOnIcon fontSize="small" />}
+                              label={
+                                <Typography 
+                                  variant="body2" 
+                                  sx={{ 
+                                    wordWrap: 'break-word', 
+                                    whiteSpace: 'normal', // Allow text to wrap
+                                    overflow: 'hidden', 
+                                    textOverflow: 'ellipsis', 
+                                    maxWidth: { xs: '100%', sm: '250px', md: '100%' }, 
+                                    lineHeight: 1.5 
+                                  }}
+                                >
+                                  {hospital.address}
+                                </Typography>
+                              }
+                              variant="outlined"
+                              size="medium" // Use medium size for better spacing
+                              sx={{
+                                height: 'auto', // Allow dynamic height
+                                padding: '8px', // Add padding for better appearance
                               }}
-                            >
-                              {hospital.address}
-                            </Typography>
-                          }
-                          variant="outlined"
-                          size="medium" // Use medium size for better spacing
-                          sx={{
-                            height: 'auto', // Allow dynamic height
-                            padding: '8px', // Add padding for better appearance
-                          }}
-                        />
-                        {hospital.website && (
-                          <Chip
-                            label="Visit Website"
-                            component="a"
-                            href={hospital.website}
-                            target="_blank"
-                            clickable
-                            variant="outlined"
-                            size="small"
-                          />
-                        )}
-                      </Box>
-                    </Box>
-                  }
-                />
-              </HospitalItem>
-              ))}
+                            />
+                            {hospital.website && (
+                              <Chip
+                                label="Visit Website"
+                                component="a"
+                                href={hospital.website}
+                                target="_blank"
+                                clickable
+                                variant="outlined"
+                                size="small"
+                              />
+                            )}
+                          </Box>
+                        </Box>
+                      }
+                    />
+                  </HospitalItem>
+                );
+              })}
             </List>
           </Box>
         )
@@ -258,6 +351,35 @@ function Hospital() {
           <LocationOnIcon color="primary" />
           Hospital Map View
         </Typography>
+
+        {/* Route Control Card */}
+        {nearestHospital && (
+          <RouteControlCard>
+            <CardContent>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
+                  <NearMeIcon color="success" />
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    Nearest Hospital: <strong>{nearestHospital.name}</strong>
+                  </Typography>
+                </Box>
+                <Typography 
+                  variant="body2" 
+                  color="textSecondary"
+                  sx={{ 
+                    fontStyle: 'italic',
+                    textAlign: { xs: 'center', sm: 'right' }
+                  }}
+                >
+                  <DirectionsIcon sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} />
+                  Red route shows fastest path to nearest hospital.<br/>
+                  Click any hospital marker to show route to that location.
+                </Typography>
+              </Stack>
+            </CardContent>
+          </RouteControlCard>
+        )}
+
         <MapContainer>
           {/* Pass valid location to HospitalMap */}
           {location?.latitude && location?.longitude ? (
@@ -275,6 +397,52 @@ function Hospital() {
           )}
         </MapContainer>
       </Box>
+
+      {/* Route control section */}
+      {nearestHospital && (
+        <RouteControlCard>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Nearest Hospital: {nearestHospital.name}
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                startIcon={<DirectionsIcon />}
+                fullWidth
+                onClick={() => {
+                  // Handle route navigation to the nearest hospital
+                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${nearestHospital.lat},${nearestHospital.lng}`, '_blank');
+                }}
+              >
+                Get Directions
+              </Button>
+              <Button
+                variant="outlined"
+                color="primary"
+                size="large"
+                startIcon={<NearMeIcon />}
+                fullWidth
+                onClick={() => {
+                  // Handle re-calculating the route from the current location
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((position) => {
+                      const { latitude, longitude } = position.coords;
+                      window.open(`https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${nearestHospital.lat},${nearestHospital.lng}`, '_blank');
+                    });
+                  } else {
+                    alert('Geolocation is not enabled in this browser.');
+                  }
+                }}
+              >
+                Recalculate Route
+              </Button>
+            </Stack>
+          </CardContent>
+        </RouteControlCard>
+      )}
     </StyledContainer>
   );
 }
