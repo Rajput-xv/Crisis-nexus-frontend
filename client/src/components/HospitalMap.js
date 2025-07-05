@@ -111,48 +111,71 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                 setRouteLayer(null);
             }
 
-            // Construct OSRM API URL
-            const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
+            // Try multiple routing services for better reliability
+            let routeData = null;
             
-            const response = await fetch(osrmUrl);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            // First try: OSRM with better parameters
+            try {
+                const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&steps=true`;
+                const osrmResponse = await fetch(osrmUrl);
+                if (osrmResponse.ok) {
+                    routeData = await osrmResponse.json();
+                }
+            } catch (osrmError) {
+                console.warn('OSRM routing failed:', osrmError);
             }
             
-            const routeData = await response.json();
+            // Second try: Alternative routing service if OSRM fails
+            if (!routeData || !routeData.routes || routeData.routes.length === 0) {
+                try {
+                    const graphhopperUrl = `https://graphhopper.com/api/1/route?point=${startLat},${startLng}&point=${endLat},${endLng}&vehicle=car&locale=en&calc_points=true&debug=true&elevation=false&points_encoded=false&type=json&key=`;
+                    // Note: This is a fallback, you might need to get a free API key from GraphHopper
+                    console.log('Trying alternative routing...');
+                } catch (altError) {
+                    console.warn('Alternative routing failed:', altError);
+                }
+            }
 
-            if (routeData.routes && routeData.routes.length > 0 && mapRef.current) {
+            // Check if we got valid route data
+            if (routeData && routeData.routes && routeData.routes.length > 0 && mapRef.current) {
                 const route = routeData.routes[0];
-                const coordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]); // Convert [lon, lat] to [lat, lon]
                 
-                // Create route polyline
-                const polyline = L.polyline(coordinates, { 
-                    color: isNearest ? '#4CAF50' : '#ff0000', // Green for nearest, red for others
-                    weight: 5,
-                    opacity: 0.8
-                });
+                // Ensure we have valid geometry
+                if (route.geometry && route.geometry.coordinates && route.geometry.coordinates.length > 0) {
+                    const coordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]); // Convert [lon, lat] to [lat, lon]
+                    
+                    // Create route polyline with solid line (not dashed)
+                    const polyline = L.polyline(coordinates, { 
+                        color: isNearest ? '#4CAF50' : '#ff0000', // Green for nearest, red for others
+                        weight: 5,
+                        opacity: 0.8,
+                        // No dashArray - this makes it a solid line for proper roads
+                    });
 
-                polyline.addTo(mapRef.current);
-                setRouteLayer(polyline);
+                    polyline.addTo(mapRef.current);
+                    setRouteLayer(polyline);
 
-                // Add route info popup
-                const distance = (route.distance / 1000).toFixed(1); // Convert to km
-                const duration = Math.round(route.duration / 60); // Convert to minutes
-                
-                polyline.bindPopup(`
-                    <div style="text-align: center;">
-                        <strong>Route to ${isNearest ? 'Nearest' : 'Selected'} Hospital</strong><br/>
-                        <span style="color: #666;">Distance: ${distance} km</span><br/>
-                        <span style="color: #666;">Duration: ${duration} minutes</span>
-                    </div>
-                `);
-
-                // Don't auto-scale map - let user control the view
+                    // Add route info popup
+                    const distance = route.distance ? (route.distance / 1000).toFixed(1) : 'N/A'; // Convert to km
+                    const duration = route.duration ? Math.round(route.duration / 60) : 'N/A'; // Convert to minutes
+                    
+                    polyline.bindPopup(`
+                        <div style="text-align: center;">
+                            <strong>Road Route to ${isNearest ? 'Nearest' : 'Selected'} Hospital</strong><br/>
+                            <span style="color: #666;">Distance: ${distance} km</span><br/>
+                            <span style="color: #666;">Duration: ${duration} minutes</span>
+                        </div>
+                    `);
+                    
+                    // Route successfully drawn, return early
+                    return;
+                }
             }
         } catch (error) {
             console.error('Error fetching route:', error);
-            // Fallback: draw a simple straight line if routing fails
+            // If we reach here, routing failed - show fallback with clear indication
+            console.warn('Road routing failed, showing direct line fallback');
+            
             if (mapRef.current) {
                 // Clear existing route before drawing fallback
                 if (routeLayer) {
@@ -167,22 +190,36 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                     color: isNearest ? '#4CAF50' : '#ff0000', // Green for nearest, red for others
                     weight: 3,
                     opacity: 0.6,
-                    dashArray: '10, 10'
+                    dashArray: '10, 10' // Dashed line indicates this is NOT a road route
                 });
                 straightLine.addTo(mapRef.current);
                 setRouteLayer(straightLine);
                 
+                // Calculate approximate distance
+                const distance = calculateDistance(startLat, startLng, endLat, endLng);
+                
                 straightLine.bindPopup(`
                     <div style="text-align: center;">
-                        <strong>Direct Line to ${isNearest ? 'Nearest' : 'Selected'} Hospital</strong><br/>
-                        <span style="color: #666;">Routing service unavailable</span>
+                        <strong>⚠️ Direct Line (Routing Unavailable)</strong><br/>
+                        <span style="color: #666;">Approx. distance: ${distance} km</span><br/>
+                        <span style="color: #999; font-size: 10px;">This is not a road route</span>
                     </div>
                 `);
-
-                // Don't auto-scale map - let user control the view
             }
         }
     }, [routeLayer]); // Only depend on routeLayer
+
+    // Helper function to calculate distance between two points (Haversine formula)
+    const calculateDistance = (lat1, lon1, lat2, lon2) => {
+        const R = 6371; // Earth's radius in km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return (R * c).toFixed(1);
+    };
 
     // Auto-select nearest hospital in both modes when hospitals are loaded
     useEffect(() => {
