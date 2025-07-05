@@ -569,6 +569,7 @@ function Hospital() {
               }}
               selectedHospital={selectedHospital}
               onHospitalSelect={handleHospitalSelect}
+              searchMode={searchMode} // Pass search mode to trigger route clearing
             />
           ) : (
             <Typography variant="body1" color="textSecondary">

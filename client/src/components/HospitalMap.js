@@ -21,7 +21,7 @@ const userLocationIcon = new L.Icon({
     shadowSize: [41, 41]
 });
 
-const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospitalSelect }) => {
+const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospitalSelect, searchMode }) => {
     const mapRef = useRef();
     const [routeLayer, setRouteLayer] = useState(null);
     const [nearestHospital, setNearestHospital] = useState(null);
@@ -49,6 +49,14 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
             }
         }
     }, [validHospitals, routeLayer]);
+
+    // Clear routes when search mode changes
+    useEffect(() => {
+        if (routeLayer && mapRef.current) {
+            mapRef.current.removeLayer(routeLayer);
+            setRouteLayer(null);
+        }
+    }, [searchMode]);
 
     // Function to draw route between two points
     const drawRoute = async (startLat, startLng, endLat, endLng, isNearest = false) => {
