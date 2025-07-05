@@ -21,7 +21,7 @@ const userLocationIcon = new L.Icon({
     shadowSize: [41, 41]
 });
 
-const HospitalMap = ({ hospitals = [], userLocation }) => {
+const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospitalSelect }) => {
     const mapRef = useRef();
     const [routeLayer, setRouteLayer] = useState(null);
     const [nearestHospital, setNearestHospital] = useState(null);
@@ -80,6 +80,7 @@ const HospitalMap = ({ hospitals = [], userLocation }) => {
             // Clear existing route
             if (routeLayer && mapRef.current) {
                 mapRef.current.removeLayer(routeLayer);
+                setRouteLayer(null);
             }
 
             // Construct OSRM API URL
@@ -88,62 +89,86 @@ const HospitalMap = ({ hospitals = [], userLocation }) => {
             const response = await fetch(osrmUrl);
             const routeData = await response.json();
 
-            if (routeData.routes && routeData.routes.length > 0) {
+            if (routeData.routes && routeData.routes.length > 0 && mapRef.current) {
                 const route = routeData.routes[0];
                 const coordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]); // Convert [lon, lat] to [lat, lon]
                 
                 // Create route polyline
                 const polyline = L.polyline(coordinates, { 
                     color: isNearest ? '#ff0000' : '#0066ff', 
-                    weight: 4,
+                    weight: 5,
                     opacity: 0.8
                 });
 
-                if (mapRef.current) {
-                    polyline.addTo(mapRef.current);
-                    setRouteLayer(polyline);
+                polyline.addTo(mapRef.current);
+                setRouteLayer(polyline);
 
-                    // Add route info popup
-                    const distance = (route.distance / 1000).toFixed(1); // Convert to km
-                    const duration = Math.round(route.duration / 60); // Convert to minutes
-                    
-                    polyline.bindPopup(`
-                        <div style="text-align: center;">
-                            <strong>${isNearest ? 'Route to Nearest Hospital' : 'Route to Selected Hospital'}</strong><br/>
-                            <span style="color: #666;">Distance: ${distance} km</span><br/>
-                            <span style="color: #666;">Duration: ${duration} minutes</span>
-                        </div>
-                    `);
-                }
+                // Add route info popup
+                const distance = (route.distance / 1000).toFixed(1); // Convert to km
+                const duration = Math.round(route.duration / 60); // Convert to minutes
+                
+                polyline.bindPopup(`
+                    <div style="text-align: center;">
+                        <strong>${isNearest ? 'Route to Nearest Hospital' : 'Route to Selected Hospital'}</strong><br/>
+                        <span style="color: #666;">Distance: ${distance} km</span><br/>
+                        <span style="color: #666;">Duration: ${duration} minutes</span>
+                    </div>
+                `);
+
+                // Fit map bounds to show both user location and destination
+                const bounds = L.latLngBounds([
+                    [startLat, startLng],
+                    [endLat, endLng]
+                ]);
+                mapRef.current.fitBounds(bounds, { padding: [20, 20] });
             }
         } catch (error) {
             console.error('Error fetching route:', error);
+            // Fallback: draw a simple straight line if routing fails
+            if (mapRef.current) {
+                if (routeLayer) {
+                    mapRef.current.removeLayer(routeLayer);
+                }
+                const straightLine = L.polyline([
+                    [startLat, startLng],
+                    [endLat, endLng]
+                ], { 
+                    color: isNearest ? '#ff0000' : '#0066ff', 
+                    weight: 3,
+                    opacity: 0.6,
+                    dashArray: '10, 10'
+                });
+                straightLine.addTo(mapRef.current);
+                setRouteLayer(straightLine);
+                
+                straightLine.bindPopup(`
+                    <div style="text-align: center;">
+                        <strong>Direct Line ${isNearest ? 'to Nearest Hospital' : 'to Selected Hospital'}</strong><br/>
+                        <span style="color: #666;">Routing service unavailable</span>
+                    </div>
+                `);
+            }
         }
     };
 
-    // Draw route to nearest hospital when component mounts
+    // Draw route to selected hospital when it changes
     useEffect(() => {
-        if (nearestHospital && userLocation && mapRef.current) {
+        if (selectedHospital && userLocation && mapRef.current) {
+            const isNearest = nearestHospital && selectedHospital.name === nearestHospital.name;
             drawRoute(
                 userLocation.latitude, 
                 userLocation.longitude, 
-                nearestHospital.lat, 
-                nearestHospital.lng,
-                true
+                selectedHospital.lat, 
+                selectedHospital.lng,
+                isNearest
             );
         }
-    }, [nearestHospital, userLocation]);
+    }, [selectedHospital, userLocation, nearestHospital]);
 
     // Handle hospital marker click
     const handleHospitalClick = (hospital) => {
-        if (userLocation) {
-            drawRoute(
-                userLocation.latitude, 
-                userLocation.longitude, 
-                hospital.lat, 
-                hospital.lng,
-                false
-            );
+        if (userLocation && onHospitalSelect) {
+            onHospitalSelect(hospital); // Update selected hospital in parent component
         }
     };
 
@@ -152,7 +177,9 @@ const HospitalMap = ({ hospitals = [], userLocation }) => {
             center={[userLocation.latitude, userLocation.longitude]} 
             zoom={13} 
             style={{ height: "400px", width: "100%" }}
-            ref={mapRef}
+            whenCreated={(map) => {
+                mapRef.current = map;
+            }}
         >
             <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -174,16 +201,41 @@ const HospitalMap = ({ hospitals = [], userLocation }) => {
             {/* Hospital markers */}
             {validHospitals?.map((hospital, index) => {
                 const isNearest = nearestHospital && hospital.name === nearestHospital.name;
+                const isSelected = selectedHospital && hospital.name === selectedHospital.name;
                 
-                // Use different icon for nearest hospital
-                const hospitalIcon = isNearest ? 
-                    new L.Icon({
+                // Use different icon for selected/nearest hospital
+                let hospitalIcon;
+                if (isSelected && isNearest) {
+                    // Selected and nearest - green with special styling
+                    hospitalIcon = new L.Icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                        iconSize: [30, 45],
+                        iconAnchor: [15, 45],
+                        popupAnchor: [1, -34],
+                        shadowSize: [45, 45]
+                    });
+                } else if (isSelected) {
+                    // Selected but not nearest - blue
+                    hospitalIcon = new L.Icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                        iconSize: [28, 42],
+                        iconAnchor: [14, 42],
+                        popupAnchor: [1, -34],
+                        shadowSize: [42, 42]
+                    });
+                } else if (isNearest) {
+                    // Nearest but not selected - green
+                    hospitalIcon = new L.Icon({
                         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
                         iconSize: [25, 41],
                         iconAnchor: [12, 41],
                         popupAnchor: [1, -34],
                         shadowSize: [41, 41]
-                    }) : redIcon;
+                    });
+                } else {
+                    // Regular hospital - red
+                    hospitalIcon = redIcon;
+                }
 
                 return (
                     <Marker
@@ -210,6 +262,19 @@ const HospitalMap = ({ hospitals = [], userLocation }) => {
                                         NEAREST
                                     </div>
                                 )}
+                                {isSelected && !isNearest && (
+                                    <div style={{ 
+                                        background: '#2196F3', 
+                                        color: 'white', 
+                                        padding: '2px 6px', 
+                                        borderRadius: '3px', 
+                                        fontSize: '10px', 
+                                        display: 'inline-block', 
+                                        marginLeft: '8px' 
+                                    }}>
+                                        SELECTED
+                                    </div>
+                                )}
                                 <br />
                                 <div style={{ marginTop: '4px', fontSize: '12px' }}>
                                     {hospital.address}
@@ -234,7 +299,7 @@ const HospitalMap = ({ hospitals = [], userLocation }) => {
                                     fontSize: '11px',
                                     textAlign: 'center'
                                 }}>
-                                    Click marker to show route
+                                    {isSelected ? 'Selected for directions' : 'Click marker to select'}
                                 </div>
                             </div>
                         </Popup>

@@ -88,6 +88,7 @@ function Hospital() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [nearestHospital, setNearestHospital] = useState(null);
+  const [selectedHospital, setSelectedHospital] = useState(null);
   const { location, setLocation } = uselocation(); // Access location from context
 
   // Calculate distance between two points using Haversine formula
@@ -128,8 +129,12 @@ function Hospital() {
       });
 
       setNearestHospital(nearest);
+      // Set selected hospital to nearest by default if no hospital is selected
+      if (!selectedHospital) {
+        setSelectedHospital(nearest);
+      }
     }
-  }, [hospitals, location]);
+  }, [hospitals, location, selectedHospital]);
 
   useEffect(() => {
     const savedLocation = localStorage.getItem('location');
@@ -242,10 +247,16 @@ function Hospital() {
                 ).toFixed(1) : null;
 
                 return (
-                  <HospitalItem key={index} sx={{ 
-                    border: isNearest ? '2px solid #4CAF50' : 'none',
-                    position: 'relative'
-                  }}>
+                  <HospitalItem 
+                    key={index} 
+                    sx={{ 
+                      border: isNearest ? '2px solid #4CAF50' : 
+                             (selectedHospital && hospital.name === selectedHospital.name) ? '2px solid #2196F3' : 'none',
+                      position: 'relative',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setSelectedHospital(hospital)}
+                  >
                     {isNearest && (
                       <Chip
                         label="NEAREST"
@@ -255,6 +266,21 @@ function Hospital() {
                           top: 8,
                           right: 8,
                           backgroundColor: '#4CAF50',
+                          color: 'white',
+                          fontWeight: 'bold',
+                          fontSize: '0.7rem'
+                        }}
+                      />
+                    )}
+                    {selectedHospital && hospital.name === selectedHospital.name && !isNearest && (
+                      <Chip
+                        label="SELECTED"
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          backgroundColor: '#2196F3',
                           color: 'white',
                           fontWeight: 'bold',
                           fontSize: '0.7rem'
@@ -353,14 +379,27 @@ function Hospital() {
         </Typography>
 
         {/* Route Control Card */}
-        {nearestHospital && (
+        {selectedHospital && (
           <RouteControlCard>
             <CardContent>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
                   <NearMeIcon color="success" />
                   <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    Nearest Hospital: <strong>{nearestHospital.name}</strong>
+                    Selected Hospital: <strong>{selectedHospital.name}</strong>
+                    {nearestHospital && selectedHospital.name === nearestHospital.name && (
+                      <Chip
+                        label="NEAREST"
+                        size="small"
+                        sx={{
+                          ml: 1,
+                          backgroundColor: '#4CAF50',
+                          color: 'white',
+                          fontWeight: 'bold',
+                          fontSize: '0.6rem'
+                        }}
+                      />
+                    )}
                   </Typography>
                 </Box>
                 <Typography 
@@ -372,8 +411,8 @@ function Hospital() {
                   }}
                 >
                   <DirectionsIcon sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} />
-                  Red route shows fastest path to nearest hospital.<br/>
-                  Click any hospital marker to show route to that location.
+                  Click any hospital from the list to select it.<br/>
+                  Routes will be shown on the map below.
                 </Typography>
               </Stack>
             </CardContent>
@@ -388,7 +427,9 @@ function Hospital() {
               userLocation={{
                 latitude: parseFloat(location.latitude), // Ensure valid numbers
                 longitude: parseFloat(location.longitude),
-              }} 
+              }}
+              selectedHospital={selectedHospital}
+              onHospitalSelect={setSelectedHospital}
             />
           ) : (
             <Typography variant="body1" color="textSecondary">
@@ -399,11 +440,24 @@ function Hospital() {
       </Box>
 
       {/* Route control section */}
-      {nearestHospital && (
+      {selectedHospital && (
         <RouteControlCard>
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Nearest Hospital: {nearestHospital.name}
+              Selected Hospital: {selectedHospital.name}
+              {nearestHospital && selectedHospital.name === nearestHospital.name && (
+                <Chip
+                  label="NEAREST"
+                  size="small"
+                  sx={{
+                    ml: 1,
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: '0.7rem'
+                  }}
+                />
+              )}
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <Button
@@ -413,8 +467,8 @@ function Hospital() {
                 startIcon={<DirectionsIcon />}
                 fullWidth
                 onClick={() => {
-                  // Handle route navigation to the nearest hospital
-                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${nearestHospital.lat},${nearestHospital.lng}`, '_blank');
+                  // Handle route navigation to the selected hospital
+                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedHospital.lat},${selectedHospital.lng}`, '_blank');
                 }}
               >
                 Get Directions
@@ -430,7 +484,7 @@ function Hospital() {
                   if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition((position) => {
                       const { latitude, longitude } = position.coords;
-                      window.open(`https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${nearestHospital.lat},${nearestHospital.lng}`, '_blank');
+                      window.open(`https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${selectedHospital.lat},${selectedHospital.lng}`, '_blank');
                     });
                   } else {
                     alert('Geolocation is not enabled in this browser.');
