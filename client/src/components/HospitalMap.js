@@ -45,7 +45,7 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
     // Function to draw route between two points
     const drawRoute = async (startLat, startLng, endLat, endLng, isNearest = false) => {
         try {
-            // Clear existing route
+            // Clear existing route first
             if (routeLayer && mapRef.current) {
                 mapRef.current.removeLayer(routeLayer);
                 setRouteLayer(null);
@@ -63,7 +63,7 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                 
                 // Create route polyline
                 const polyline = L.polyline(coordinates, { 
-                    color: isNearest ? '#ff0000' : '#0066ff', 
+                    color: isNearest ? '#4CAF50' : '#ff0000', // Green for nearest, red for others
                     weight: 5,
                     opacity: 0.8
                 });
@@ -77,7 +77,7 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                 
                 polyline.bindPopup(`
                     <div style="text-align: center;">
-                        <strong>${isNearest ? 'Route to Nearest Hospital' : 'Route to Selected Hospital'}</strong><br/>
+                        <strong>Route to ${isNearest ? 'Nearest' : 'Selected'} Hospital</strong><br/>
                         <span style="color: #666;">Distance: ${distance} km</span><br/>
                         <span style="color: #666;">Duration: ${duration} minutes</span>
                     </div>
@@ -94,14 +94,17 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
             console.error('Error fetching route:', error);
             // Fallback: draw a simple straight line if routing fails
             if (mapRef.current) {
+                // Clear existing route before drawing fallback
                 if (routeLayer) {
                     mapRef.current.removeLayer(routeLayer);
+                    setRouteLayer(null);
                 }
+                
                 const straightLine = L.polyline([
                     [startLat, startLng],
                     [endLat, endLng]
                 ], { 
-                    color: isNearest ? '#ff0000' : '#0066ff', 
+                    color: isNearest ? '#4CAF50' : '#ff0000', // Green for nearest, red for others
                     weight: 3,
                     opacity: 0.6,
                     dashArray: '10, 10'
@@ -111,13 +114,26 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                 
                 straightLine.bindPopup(`
                     <div style="text-align: center;">
-                        <strong>Direct Line ${isNearest ? 'to Nearest Hospital' : 'to Selected Hospital'}</strong><br/>
+                        <strong>Direct Line to ${isNearest ? 'Nearest' : 'Selected'} Hospital</strong><br/>
                         <span style="color: #666;">Routing service unavailable</span>
                     </div>
                 `);
             }
         }
     };
+
+    // Draw route to nearest hospital by default when hospitals are loaded
+    useEffect(() => {
+        if (nearestHospital && userLocation && mapRef.current) {
+            drawRoute(
+                userLocation.latitude, 
+                userLocation.longitude, 
+                nearestHospital.lat, 
+                nearestHospital.lng,
+                true
+            );
+        }
+    }, [nearestHospital, userLocation]);
 
     // Draw route to selected hospital when it changes
     useEffect(() => {
