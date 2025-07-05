@@ -91,50 +91,19 @@ function Hospital() {
   const [selectedHospital, setSelectedHospital] = useState(null);
   const { location, setLocation } = uselocation(); // Access location from context
 
-  // Calculate distance between two points using Haversine formula
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Radius of the Earth in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c; // Distance in km
-  };
-
-  // Find nearest hospital when hospitals or location changes
+  // Find nearest hospital when hospitals change (hospitals are already sorted by distance from backend)
   useEffect(() => {
-    if (hospitals.length > 0 && location?.latitude && location?.longitude) {
-      let nearest = hospitals[0];
-      let minDistance = calculateDistance(
-        location.latitude, 
-        location.longitude, 
-        nearest.lat, 
-        nearest.lng
-      );
-
-      hospitals.forEach(hospital => {
-        const distance = calculateDistance(
-          location.latitude, 
-          location.longitude, 
-          hospital.lat, 
-          hospital.lng
-        );
-        if (distance < minDistance) {
-          minDistance = distance;
-          nearest = hospital;
-        }
-      });
-
+    if (hospitals.length > 0) {
+      // Since hospitals are already sorted by distance, the first one is the nearest
+      const nearest = hospitals[0];
       setNearestHospital(nearest);
+      
       // Set selected hospital to nearest by default if no hospital is selected
       if (!selectedHospital) {
         setSelectedHospital(nearest);
       }
     }
-  }, [hospitals, location, selectedHospital]);
+  }, [hospitals, selectedHospital]);
 
   useEffect(() => {
     const savedLocation = localStorage.getItem('location');
@@ -239,12 +208,8 @@ function Hospital() {
             <List>
               {hospitals.map((hospital, index) => {
                 const isNearest = nearestHospital && hospital.name === nearestHospital.name;
-                const distance = location ? calculateDistance(
-                  location.latitude, 
-                  location.longitude, 
-                  hospital.lat, 
-                  hospital.lng
-                ).toFixed(1) : null;
+                // Use the distance from backend data (already calculated and sorted)
+                const distance = hospital.distance ? hospital.distance.toFixed(1) : null;
 
                 return (
                   <HospitalItem 

@@ -33,46 +33,14 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
     // Filter hospitals with valid coordinates
     const validHospitals = hospitals.filter(hospital => hospital.lat && hospital.lng);
 
-    // Calculate distance between two points using Haversine formula
-    const calculateDistance = (lat1, lon1, lat2, lon2) => {
-        const R = 6371; // Radius of the Earth in km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = 
-            Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-            Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c; // Distance in km
-    };
-
-    // Find nearest hospital
+    // Find nearest hospital (hospitals are already sorted by distance from backend)
     useEffect(() => {
-        if (validHospitals.length > 0 && userLocation) {
-            let nearest = validHospitals[0];
-            let minDistance = calculateDistance(
-                userLocation.latitude, 
-                userLocation.longitude, 
-                nearest.lat, 
-                nearest.lng
-            );
-
-            validHospitals.forEach(hospital => {
-                const distance = calculateDistance(
-                    userLocation.latitude, 
-                    userLocation.longitude, 
-                    hospital.lat, 
-                    hospital.lng
-                );
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    nearest = hospital;
-                }
-            });
-
+        if (validHospitals.length > 0) {
+            // Since hospitals are already sorted by distance, the first one is the nearest
+            const nearest = validHospitals[0];
             setNearestHospital(nearest);
         }
-    }, [validHospitals, userLocation]);
+    }, [validHospitals]);
 
     // Function to draw route between two points
     const drawRoute = async (startLat, startLng, endLat, endLng, isNearest = false) => {
