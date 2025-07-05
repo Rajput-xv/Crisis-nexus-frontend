@@ -2,13 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Container,
   Typography,
-  Grid,
   Alert,
   List,
   ListItem,
   ListItemText,
   CircularProgress,
-  useMediaQuery,
   useTheme,
   Box,
   Chip,
@@ -18,15 +16,12 @@ import {
   CardContent,
   TextField,
   InputAdornment,
-  IconButton,
 } from "@mui/material";
 import axios from 'axios';
 import HospitalMap from '../components/HospitalMap';
 import { styled } from '@mui/material/styles';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
-import PhoneIcon from '@mui/icons-material/Phone';
-import StarRateIcon from '@mui/icons-material/StarRate';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import SearchIcon from '@mui/icons-material/Search';
@@ -84,7 +79,6 @@ const RouteControlCard = styled(Card)(({ theme }) => ({
 
 function Hospital() {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const mapRef = useRef(null); // Reference to the map container
   const [hospitals, setHospitals] = useState(() => {
     const savedHospitals = localStorage.getItem('hospitals');
@@ -125,6 +119,12 @@ function Hospital() {
       setLoading(true);
       setError("");
       
+      // Clear all previous state immediately when switching to city search
+      setSelectedHospital(null);
+      setNearestHospital(null);
+      setHospitals([]); // Clear hospitals to trigger route clearing
+      setSearchMode(true); // Set search mode to trigger route clearing in map
+      
       // Include user location in the request if available for better sorting
       const params = new URLSearchParams();
       if (location?.latitude && location?.longitude) {
@@ -139,10 +139,7 @@ function Hospital() {
       
       const data = response.data;
       
-      // Clear previous state and set new data
-      setSelectedHospital(null);
-      setNearestHospital(null);
-      setSearchMode(true);
+      // Set new data after clearing
       setHospitals(data.places || data);
       localStorage.setItem('hospitals', JSON.stringify(data.places || data));
       localStorage.setItem('searchCity', searchCity.trim());
@@ -172,44 +169,17 @@ function Hospital() {
     }
   };
 
-  // Function to fetch nearby hospitals (existing functionality)
-  const fetchNearbyHospitals = async (latitude, longitude) => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}api/hospital/nearby`, {
-        params: { lat: latitude, lng: longitude }
-      });
-      const data = response.data;
-      setHospitals(data.places);
-      localStorage.setItem('hospitals', JSON.stringify(data.places));
-      setError(null);
-      setSearchMode(false);
-    } catch (err) {
-      setError('Failed to fetch hospitals.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Find nearest hospital when hospitals change (only for location-based search)
-  // Find nearest hospital when hospitals change (only for location-based search)
+  // Find nearest hospital when hospitals change - let HospitalMap handle auto-selection
   useEffect(() => {
-    if (hospitals.length > 0 && !searchMode) {
-      // Since hospitals are already sorted by distance, the first one is the nearest
+    if (hospitals.length > 0) {
+      // Set nearest hospital in both location and city search modes
       const nearest = hospitals[0];
       setNearestHospital(nearest);
-      
-      // Set selected hospital to nearest by default if no hospital is selected
-      if (!selectedHospital) {
-        setSelectedHospital(nearest);
-      }
-    } else if (searchMode && hospitals.length > 0) {
-      // For city search, just set the first hospital as selected by default
-      if (!selectedHospital) {
-        setSelectedHospital(hospitals[0]);
-      }
+    } else {
+      // Clear nearest hospital when no hospitals
+      setNearestHospital(null);
     }
-  }, [hospitals, selectedHospital, searchMode]);
+  }, [hospitals]);
 
   useEffect(() => {
     const savedLocation = localStorage.getItem('location');
@@ -383,13 +353,13 @@ function Hospital() {
             </Typography>
             <List>
               {hospitals.map((hospital, index) => {
-                const isNearest = nearestHospital && hospital.name === nearestHospital.name && !searchMode;
+                const isNearest = nearestHospital && hospital.name === nearestHospital.name;
                 // Use the distance from backend data (already calculated and sorted)
                 const distance = hospital.distance ? hospital.distance.toFixed(1) : null;
 
                 return (
                   <HospitalItem 
-                    key={index} 
+                    key={hospital.name || index} 
                     sx={{ 
                       border: isNearest ? '2px solid #4CAF50' : 
                              (selectedHospital && hospital.name === selectedHospital.name) ? '2px solid #2196F3' : 'none',
@@ -434,7 +404,7 @@ function Hospital() {
                           <Typography variant="h6" sx={{ fontWeight: 600 }}>
                             {hospital.name}
                           </Typography>
-                          {distance && !searchMode && (
+                          {distance && (
                             <Chip
                               icon={<DirectionsIcon fontSize="small" />}
                               label={`${distance} km`}
@@ -572,6 +542,7 @@ function Hospital() {
               selectedHospital={selectedHospital}
               onHospitalSelect={handleHospitalSelect}
               searchMode={searchMode} // Pass search mode to trigger route clearing
+              setNearestHospital={setNearestHospital} // Pass function to set nearest hospital
             />
           ) : (
             <Typography variant="body1" color="textSecondary">

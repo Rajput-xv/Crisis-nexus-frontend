@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -21,29 +21,47 @@ const userLocationIcon = new L.Icon({
     shadowSize: [41, 41]
 });
 
-const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospitalSelect, searchMode }) => {
+// Component to capture map reference
+const MapRefSetter = ({ setMapRef }) => {
+    const map = useMap();
+    useEffect(() => {
+        setMapRef(map);
+    }, [map, setMapRef]);
+    return null;
+};
+
+const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospitalSelect, searchMode, setNearestHospital: setParentNearestHospital }) => {
     const mapRef = useRef();
     const [routeLayer, setRouteLayer] = useState(null);
     const [nearestHospital, setNearestHospital] = useState(null);
+
+    // Function to set map reference
+    const setMapRef = (map) => {
+        mapRef.current = map;
+    };
 
     if (!userLocation?.latitude || !userLocation?.longitude) {
         return <div>User location is not available.</div>;
     }
 
-    // Filter hospitals with valid coordinates
-    const validHospitals = hospitals.filter(hospital => hospital.lat && hospital.lng);
-
     // Find nearest hospital (hospitals are already sorted by distance from backend)
     useEffect(() => {
-        if (validHospitals.length > 0 && !searchMode) {
-            // Only set nearest hospital in location mode
+        const validHospitals = hospitals.filter(hospital => hospital.lat && hospital.lng);
+        if (validHospitals.length > 0) {
+            // Set nearest hospital in both location and city search modes
             const nearest = validHospitals[0];
             setNearestHospital(nearest);
+            if (setParentNearestHospital) {
+                setParentNearestHospital(nearest); // Update parent state as well
+            }
         } else {
-            // Clear nearest hospital when in search mode or no hospitals
+            // Clear nearest hospital when no hospitals
             setNearestHospital(null);
+            if (setParentNearestHospital) {
+                setParentNearestHospital(null); // Update parent state as well
+            }
         }
-    }, [validHospitals, searchMode]);
+    }, [hospitals, setParentNearestHospital]);
 
     // Clear routes when search mode changes
     useEffect(() => {
@@ -52,6 +70,14 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
             setRouteLayer(null);
         }
     }, [searchMode]);
+
+    // Clear routes when hospitals array becomes empty (for mode switching)
+    useEffect(() => {
+        if (hospitals.length === 0 && routeLayer && mapRef.current) {
+            mapRef.current.removeLayer(routeLayer);
+            setRouteLayer(null);
+        }
+    }, [hospitals.length]);
 
     // Function to draw route between two points
     const drawRoute = async (startLat, startLng, endLat, endLng, isNearest = false) => {
@@ -148,23 +174,18 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
         }
     };
 
-    // Draw route to nearest hospital by default when hospitals are loaded (ONLY in location mode)
+    // Auto-select nearest hospital in both modes when hospitals are loaded
     useEffect(() => {
-        if (nearestHospital && userLocation && mapRef.current && !selectedHospital && !searchMode) {
-            drawRoute(
-                userLocation.latitude, 
-                userLocation.longitude, 
-                nearestHospital.lat, 
-                nearestHospital.lng,
-                true
-            );
+        if (nearestHospital && userLocation && mapRef.current && !selectedHospital) {
+            // Auto-select the nearest hospital in both location and city search modes
+            onHospitalSelect(nearestHospital);
         }
-    }, [nearestHospital, userLocation, selectedHospital, searchMode]);
+    }, [nearestHospital, userLocation, selectedHospital, onHospitalSelect]);
 
-    // Draw route to selected hospital when it changes
+    // Draw route to selected hospital when it changes (works in both modes)
     useEffect(() => {
         if (selectedHospital && userLocation && mapRef.current) {
-            const isNearest = nearestHospital && selectedHospital.name === nearestHospital.name && !searchMode;
+            const isNearest = nearestHospital && selectedHospital.name === nearestHospital.name;
             drawRoute(
                 userLocation.latitude, 
                 userLocation.longitude, 
@@ -173,7 +194,7 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                 isNearest
             );
         }
-    }, [selectedHospital, userLocation, nearestHospital, searchMode]);
+    }, [selectedHospital, userLocation, nearestHospital]);
 
     // Handle hospital marker click
     const handleHospitalClick = (hospital) => {
@@ -187,10 +208,9 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
             center={[userLocation.latitude, userLocation.longitude]} 
             zoom={13} 
             style={{ height: "400px", width: "100%" }}
-            whenCreated={(map) => {
-                mapRef.current = map;
-            }}
+            ref={mapRef}
         >
+            <MapRefSetter setMapRef={setMapRef} />
             <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -209,7 +229,7 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                 </Popup>
             </Marker>
             {/* Hospital markers */}
-            {validHospitals?.map((hospital, index) => {
+            {hospitals.filter(hospital => hospital.lat && hospital.lng)?.map((hospital, index) => {
                 const isNearest = nearestHospital && hospital.name === nearestHospital.name;
                 const isSelected = selectedHospital && hospital.name === selectedHospital.name;
                 
