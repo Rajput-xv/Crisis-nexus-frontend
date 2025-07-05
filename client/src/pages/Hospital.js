@@ -187,11 +187,17 @@ function Hospital() {
       // Set nearest hospital in both location and city search modes
       const nearest = hospitals[0];
       setNearestHospital(nearest);
+      
+      // Check if current selectedHospital is still in the new hospitals array
+      if (selectedHospital && !hospitals.some(hospital => hospital.name === selectedHospital.name)) {
+        setSelectedHospital(null); // Clear selection if hospital is not in current array
+      }
     } else {
       // Clear nearest hospital when no hospitals
       setNearestHospital(null);
+      setSelectedHospital(null); // Also clear selected hospital
     }
-  }, [hospitals]);
+  }, [hospitals, selectedHospital]);
 
   useEffect(() => {
     const savedLocation = localStorage.getItem('location');
@@ -502,7 +508,8 @@ function Hospital() {
         </Typography>
 
         {/* Route Control Card */}
-        {selectedHospital && hospitals.length > 0 && (
+        {selectedHospital && hospitals.length > 0 && 
+         hospitals.some(hospital => hospital.name === selectedHospital.name) && (
           <RouteControlCard>
             <CardContent>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
@@ -565,7 +572,8 @@ function Hospital() {
       </Box>
 
       {/* Route control section */}
-      {selectedHospital && hospitals.length > 0 && (
+      {selectedHospital && hospitals.length > 0 && 
+       hospitals.some(hospital => hospital.name === selectedHospital.name) && (
         <RouteControlCard>
           <CardContent>
             <Typography variant="h6" gutterBottom>
