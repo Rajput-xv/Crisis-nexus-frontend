@@ -83,12 +83,16 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                     </div>
                 `);
 
-                // Fit map bounds to show both user location and destination
-                const bounds = L.latLngBounds([
-                    [startLat, startLng],
-                    [endLat, endLng]
-                ]);
-                mapRef.current.fitBounds(bounds, { padding: [20, 20] });
+                // Auto-scale map after 1 second to show the full route
+                setTimeout(() => {
+                    if (mapRef.current) {
+                        const bounds = L.latLngBounds([
+                            [startLat, startLng],
+                            [endLat, endLng]
+                        ]);
+                        mapRef.current.fitBounds(bounds, { padding: [20, 20] });
+                    }
+                }, 1000);
             }
         } catch (error) {
             console.error('Error fetching route:', error);
@@ -118,13 +122,24 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                         <span style="color: #666;">Routing service unavailable</span>
                     </div>
                 `);
+
+                // Auto-scale map after 1 second to show the full route
+                setTimeout(() => {
+                    if (mapRef.current) {
+                        const bounds = L.latLngBounds([
+                            [startLat, startLng],
+                            [endLat, endLng]
+                        ]);
+                        mapRef.current.fitBounds(bounds, { padding: [20, 20] });
+                    }
+                }, 1000);
             }
         }
     };
 
-    // Draw route to nearest hospital by default when hospitals are loaded
+    // Draw route to nearest hospital by default when hospitals are loaded (only if no hospital is selected)
     useEffect(() => {
-        if (nearestHospital && userLocation && mapRef.current) {
+        if (nearestHospital && userLocation && mapRef.current && !selectedHospital) {
             drawRoute(
                 userLocation.latitude, 
                 userLocation.longitude, 
@@ -133,7 +148,7 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                 true
             );
         }
-    }, [nearestHospital, userLocation]);
+    }, [nearestHospital, userLocation, selectedHospital]);
 
     // Draw route to selected hospital when it changes
     useEffect(() => {
