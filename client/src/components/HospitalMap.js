@@ -79,6 +79,14 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
         }
     }, [hospitals.length]);
 
+    // Clear routes when selectedHospital becomes null
+    useEffect(() => {
+        if (!selectedHospital && routeLayer && mapRef.current) {
+            mapRef.current.removeLayer(routeLayer);
+            setRouteLayer(null);
+        }
+    }, [selectedHospital]);
+
     // Function to draw route between two points
     const drawRoute = async (startLat, startLng, endLat, endLng, isNearest = false) => {
         try {
@@ -193,6 +201,10 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                 selectedHospital.lng,
                 isNearest
             );
+        } else if (!selectedHospital && routeLayer && mapRef.current) {
+            // Clear route when no hospital is selected
+            mapRef.current.removeLayer(routeLayer);
+            setRouteLayer(null);
         }
     }, [selectedHospital, userLocation, nearestHospital]);
 

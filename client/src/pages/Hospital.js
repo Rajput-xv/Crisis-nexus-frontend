@@ -123,6 +123,10 @@ function Hospital() {
       setSelectedHospital(null);
       setNearestHospital(null);
       setHospitals([]); // Clear hospitals to trigger route clearing
+      
+      // Force a small delay to ensure route clearing
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       setSearchMode(true); // Set search mode to trigger route clearing in map
       
       // Include user location in the request if available for better sorting
@@ -154,18 +158,26 @@ function Hospital() {
   };
 
   // Function to clear search and return to location-based search
-  const handleClearSearch = () => {
+  const handleClearSearch = async () => {
     setSearchCity("");
     setError("");
     setSelectedHospital(null);
     setNearestHospital(null);
+    setHospitals([]); // Clear hospitals to trigger route clearing
+    
+    // Force a small delay to ensure route clearing
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     setSearchMode(false);
     localStorage.removeItem('searchCity');
     localStorage.removeItem('hospitals');
     
-    // Trigger location-based search
+    // Trigger location-based search after clearing
     if (location?.latitude && location?.longitude) {
-      setHospitals([]); // This will trigger the useEffect to refetch
+      // Small delay to ensure state is cleared before refetching
+      setTimeout(() => {
+        setHospitals([]); // This will trigger the useEffect to refetch
+      }, 150);
     }
   };
 
@@ -490,7 +502,7 @@ function Hospital() {
         </Typography>
 
         {/* Route Control Card */}
-        {selectedHospital && (
+        {selectedHospital && hospitals.length > 0 && (
           <RouteControlCard>
             <CardContent>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
@@ -553,7 +565,7 @@ function Hospital() {
       </Box>
 
       {/* Route control section */}
-      {selectedHospital && (
+      {selectedHospital && hospitals.length > 0 && (
         <RouteControlCard>
           <CardContent>
             <Typography variant="h6" gutterBottom>
