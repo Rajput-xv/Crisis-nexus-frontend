@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Container,
   Typography,
@@ -16,6 +16,9 @@ import {
   Stack,
   Card,
   CardContent,
+  TextField,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import axios from 'axios';
 import HospitalMap from '../components/HospitalMap';
@@ -26,6 +29,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import StarRateIcon from '@mui/icons-material/StarRate';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import NearMeIcon from '@mui/icons-material/NearMe';
+import SearchIcon from '@mui/icons-material/Search';
 import { uselocation } from '../contexts/LocationContext';
 
 const StyledContainer = styled(Container)(({ theme }) => ({
@@ -81,6 +85,7 @@ const RouteControlCard = styled(Card)(({ theme }) => ({
 function Hospital() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const mapRef = useRef(null); // Reference to the map container
   const [hospitals, setHospitals] = useState(() => {
     const savedHospitals = localStorage.getItem('hospitals');
     return savedHospitals ? JSON.parse(savedHospitals) : [];
@@ -89,11 +94,94 @@ function Hospital() {
   const [loading, setLoading] = useState(false);
   const [nearestHospital, setNearestHospital] = useState(null);
   const [selectedHospital, setSelectedHospital] = useState(null);
+  const [searchCity, setSearchCity] = useState("");
+  const [searchMode, setSearchMode] = useState(false); // false = location-based, true = city-based
   const { location, setLocation } = uselocation(); // Access location from context
 
-  // Find nearest hospital when hospitals change (hospitals are already sorted by distance from backend)
+  // Function to handle hospital selection and scroll to map
+  const handleHospitalSelect = (hospital) => {
+    setSelectedHospital(hospital);
+    
+    // Scroll to map component with smooth animation
+    setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+          inline: 'nearest'
+        });
+      }
+    }, 100); // Small delay to ensure state update
+  };
+
+  // Function to search hospitals by city
+  const handleCitySearch = async () => {
+    if (!searchCity.trim()) {
+      setError("Please enter a city name");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}api/hospital/city/${encodeURIComponent(searchCity.trim())}`);
+      
+      const data = response.data;
+      setHospitals(data.places || data); // Handle different response formats
+      setSearchMode(true);
+      setSelectedHospital(null); // Reset selection when searching
+      setNearestHospital(null); // Reset nearest since we're not using location
+      localStorage.setItem('hospitals', JSON.stringify(data.places || data));
+      localStorage.setItem('searchCity', searchCity.trim());
+    } catch (err) {
+      console.error("Error searching hospitals by city:", err);
+      setError(err.response?.data?.message || 'Failed to fetch hospitals for this city.');
+      setHospitals([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to clear search and return to location-based search
+  const handleClearSearch = () => {
+    setSearchCity("");
+    setSearchMode(false);
+    setError("");
+    setSelectedHospital(null);
+    setNearestHospital(null);
+    localStorage.removeItem('searchCity');
+    localStorage.removeItem('hospitals');
+    
+    // This will trigger the useEffect to fetch location-based hospitals
+    if (location?.latitude && location?.longitude) {
+      // Clear hospitals first, then let useEffect handle the refetch
+      setHospitals([]);
+    }
+  };
+
+  // Function to fetch nearby hospitals (existing functionality)
+  const fetchNearbyHospitals = async (latitude, longitude) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}api/hospital/nearby`, {
+        params: { lat: latitude, lng: longitude }
+      });
+      const data = response.data;
+      setHospitals(data.places);
+      localStorage.setItem('hospitals', JSON.stringify(data.places));
+      setError(null);
+      setSearchMode(false);
+    } catch (err) {
+      setError('Failed to fetch hospitals.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Find nearest hospital when hospitals change (only for location-based search)
+  // Find nearest hospital when hospitals change (only for location-based search)
   useEffect(() => {
-    if (hospitals.length > 0) {
+    if (hospitals.length > 0 && !searchMode) {
       // Since hospitals are already sorted by distance, the first one is the nearest
       const nearest = hospitals[0];
       setNearestHospital(nearest);
@@ -102,12 +190,22 @@ function Hospital() {
       if (!selectedHospital) {
         setSelectedHospital(nearest);
       }
+    } else if (searchMode && hospitals.length > 0) {
+      // For city search, just set the first hospital as selected by default
+      if (!selectedHospital) {
+        setSelectedHospital(hospitals[0]);
+      }
     }
-  }, [hospitals, selectedHospital]);
+  }, [hospitals, selectedHospital, searchMode]);
 
   useEffect(() => {
     const savedLocation = localStorage.getItem('location');
-    if (savedLocation) {
+    const savedCity = localStorage.getItem('searchCity');
+    
+    if (savedCity) {
+      setSearchCity(savedCity);
+      setSearchMode(true);
+    } else if (savedLocation) {
       setLocation(JSON.parse(savedLocation));
     }
   }, [setLocation]);
@@ -115,38 +213,39 @@ function Hospital() {
   useEffect(() => {
     let isMounted = true;
 
-    const fetchNearbyHospitals = async (latitude, longitude) => {
+    if (location?.latitude && location?.longitude && !searchMode) {
+      localStorage.setItem('location', JSON.stringify(location));
+      
+      const fetchData = async () => {
         try {
-            setLoading(true);
-            const response = await axios.get(`${process.env.REACT_APP_API_URL}api/hospital/nearby`, {
-                params: { lat: latitude, lng: longitude } // Send lat and lng as query parameters
-            });
-            if (isMounted) {
-                const data = response.data;
-                setHospitals(data.places); // Use the refined `places` array from the backend
-                localStorage.setItem('hospitals', JSON.stringify(data.places)); // Save to localStorage
-                setError(null);
-            }
+          setLoading(true);
+          const response = await axios.get(`${process.env.REACT_APP_API_URL}api/hospital/nearby`, {
+            params: { lat: location.latitude, lng: location.longitude }
+          });
+          if (isMounted) {
+            const data = response.data;
+            setHospitals(data.places);
+            localStorage.setItem('hospitals', JSON.stringify(data.places));
+            setError(null);
+          }
         } catch (err) {
-            if (isMounted) {
-                setError('Failed to fetch hospitals.');
-            }
+          if (isMounted) {
+            setError('Failed to fetch hospitals.');
+          }
         } finally {
-            if (isMounted) {
-                setLoading(false);
-            }
+          if (isMounted) {
+            setLoading(false);
+          }
         }
-    };
+      };
 
-    if (location?.latitude && location?.longitude) {
-        localStorage.setItem('location', JSON.stringify(location)); // Save location to localStorage
-        fetchNearbyHospitals(location.latitude, location.longitude);
+      fetchData();
     }
 
     return () => {
-        isMounted = false;
+      isMounted = false;
     };
-}, [location]);
+  }, [location, searchMode]);
 
   return (
     <StyledContainer maxWidth="lg">
@@ -166,6 +265,70 @@ function Hospital() {
             <LocalHospitalIcon sx={{ fontSize: 40, verticalAlign: 'middle', mr: 1 }} />
             Hospital Finder
           </Typography>
+          
+          {/* Search Bar */}
+          <Box sx={{ mt: 3, maxWidth: 600, mx: 'auto' }}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter city name to search hospitals..."
+              value={searchCity}
+              onChange={(e) => setSearchCity(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleCitySearch();
+                }
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Stack direction="row" spacing={1}>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={handleCitySearch}
+                        disabled={loading}
+                        sx={{ minWidth: 'auto', px: 2 }}
+                      >
+                        Search
+                      </Button>
+                      {(searchMode || searchCity) && (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={handleClearSearch}
+                          sx={{ minWidth: 'auto', px: 2 }}
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </Stack>
+                  </InputAdornment>
+                )
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 3,
+                  backgroundColor: theme.palette.background.default,
+                }
+              }}
+            />
+            
+            {searchMode && (
+              <Typography 
+                variant="body2" 
+                color="primary" 
+                sx={{ mt: 1, fontWeight: 500 }}
+              >
+                🏙️ Showing hospitals in: {localStorage.getItem('searchCity')}
+              </Typography>
+            )}
+          </Box>
         </Box>
 
         {error && (
@@ -203,11 +366,11 @@ function Hospital() {
               }}
             >
               <LocalHospitalIcon color="primary" />
-              {hospitals.length} Hospitals Found Nearby
+              {hospitals.length} Hospitals Found {searchMode ? `in ${localStorage.getItem('searchCity')}` : 'Nearby'}
             </Typography>
             <List>
               {hospitals.map((hospital, index) => {
-                const isNearest = nearestHospital && hospital.name === nearestHospital.name;
+                const isNearest = nearestHospital && hospital.name === nearestHospital.name && !searchMode;
                 // Use the distance from backend data (already calculated and sorted)
                 const distance = hospital.distance ? hospital.distance.toFixed(1) : null;
 
@@ -220,7 +383,7 @@ function Hospital() {
                       position: 'relative',
                       cursor: 'pointer'
                     }}
-                    onClick={() => setSelectedHospital(hospital)}
+                    onClick={() => handleHospitalSelect(hospital)}
                   >
                     {isNearest && (
                       <Chip
@@ -258,7 +421,7 @@ function Hospital() {
                           <Typography variant="h6" sx={{ fontWeight: 600 }}>
                             {hospital.name}
                           </Typography>
-                          {distance && (
+                          {distance && !searchMode && (
                             <Chip
                               icon={<DirectionsIcon fontSize="small" />}
                               label={`${distance} km`}
@@ -327,7 +490,7 @@ function Hospital() {
         )
       )}
 
-      <Box mt={6}>
+      <Box mt={6} ref={mapRef}>
         <Typography 
           variant="h5" 
           gutterBottom 
@@ -394,7 +557,7 @@ function Hospital() {
                 longitude: parseFloat(location.longitude),
               }}
               selectedHospital={selectedHospital}
-              onHospitalSelect={setSelectedHospital}
+              onHospitalSelect={handleHospitalSelect}
             />
           ) : (
             <Typography variant="body1" color="textSecondary">
