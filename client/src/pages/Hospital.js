@@ -124,7 +124,18 @@ function Hospital() {
     try {
       setLoading(true);
       setError("");
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}api/hospital/city/${encodeURIComponent(searchCity.trim())}`);
+      
+      // Include user location in the request if available for better sorting
+      const params = new URLSearchParams();
+      if (location?.latitude && location?.longitude) {
+        params.append('lat', location.latitude);
+        params.append('lng', location.longitude);
+      }
+      
+      const queryString = params.toString();
+      const url = `${process.env.REACT_APP_API_URL}api/hospital/city/${encodeURIComponent(searchCity.trim())}${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await axios.get(url);
       
       const data = response.data;
       setHospitals(data.places || data); // Handle different response formats

@@ -39,8 +39,16 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
             // Since hospitals are already sorted by distance, the first one is the nearest
             const nearest = validHospitals[0];
             setNearestHospital(nearest);
+        } else {
+            // Clear nearest hospital when hospitals list is empty
+            setNearestHospital(null);
+            // Clear any existing routes
+            if (routeLayer && mapRef.current) {
+                mapRef.current.removeLayer(routeLayer);
+                setRouteLayer(null);
+            }
         }
-    }, [validHospitals]);
+    }, [validHospitals, routeLayer]);
 
     // Function to draw route between two points
     const drawRoute = async (startLat, startLng, endLat, endLng, isNearest = false) => {
