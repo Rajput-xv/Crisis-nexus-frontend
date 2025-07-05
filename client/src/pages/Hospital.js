@@ -125,6 +125,11 @@ function Hospital() {
       setLoading(true);
       setError("");
       
+      // Clear all previous state immediately when switching to city search
+      setSelectedHospital(null);
+      setNearestHospital(null);
+      setHospitals([]); // Clear hospitals first to trigger map clearing
+      
       // Include user location in the request if available for better sorting
       const params = new URLSearchParams();
       if (location?.latitude && location?.longitude) {
@@ -138,12 +143,17 @@ function Hospital() {
       const response = await axios.get(url);
       
       const data = response.data;
-      setHospitals(data.places || data); // Handle different response formats
+      
+      // Set search mode BEFORE setting hospitals to prevent nearest hospital logic
       setSearchMode(true);
-      setSelectedHospital(null); // Reset selection when searching
-      setNearestHospital(null); // Reset nearest since we're not using location
-      localStorage.setItem('hospitals', JSON.stringify(data.places || data));
-      localStorage.setItem('searchCity', searchCity.trim());
+      
+      // Set hospitals after a small delay to ensure clean state
+      setTimeout(() => {
+        setHospitals(data.places || data);
+        localStorage.setItem('hospitals', JSON.stringify(data.places || data));
+        localStorage.setItem('searchCity', searchCity.trim());
+      }, 100);
+      
     } catch (err) {
       console.error("Error searching hospitals by city:", err);
       setError(err.response?.data?.message || 'Failed to fetch hospitals for this city.');
@@ -155,18 +165,40 @@ function Hospital() {
 
   // Function to clear search and return to location-based search
   const handleClearSearch = () => {
+    // Clear all state immediately when switching to location search
     setSearchCity("");
-    setSearchMode(false);
     setError("");
     setSelectedHospital(null);
     setNearestHospital(null);
+    setHospitals([]); // Clear hospitals first to trigger map clearing
     localStorage.removeItem('searchCity');
     localStorage.removeItem('hospitals');
     
-    // This will trigger the useEffect to fetch location-based hospitals
+    // Set search mode BEFORE triggering location fetch
+    setSearchMode(false);
+    
+    // Trigger location-based search after a small delay to ensure clean state
     if (location?.latitude && location?.longitude) {
-      // Clear hospitals first, then let useEffect handle the refetch
-      setHospitals([]);
+      setTimeout(() => {
+        // This will trigger the useEffect to fetch location-based hospitals
+        const fetchData = async () => {
+          try {
+            setLoading(true);
+            const response = await axios.get(`${process.env.REACT_APP_API_URL}api/hospital/nearby`, {
+              params: { lat: location.latitude, lng: location.longitude }
+            });
+            const data = response.data;
+            setHospitals(data.places);
+            localStorage.setItem('hospitals', JSON.stringify(data.places));
+            setError(null);
+          } catch (err) {
+            setError('Failed to fetch hospitals.');
+          } finally {
+            setLoading(false);
+          }
+        };
+        fetchData();
+      }, 100);
     }
   };
 
