@@ -148,16 +148,7 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                     </div>
                 `);
 
-                // Auto-scale map after 1 second to show the full route
-                setTimeout(() => {
-                    if (mapRef.current) {
-                        const bounds = L.latLngBounds([
-                            [startLat, startLng],
-                            [endLat, endLng]
-                        ]);
-                        mapRef.current.fitBounds(bounds, { padding: [20, 20] });
-                    }
-                }, 1000);
+                // Don't auto-scale map - let user control the view
             }
         } catch (error) {
             console.error('Error fetching route:', error);
@@ -188,16 +179,7 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                     </div>
                 `);
 
-                // Auto-scale map after 1 second to show the full route
-                setTimeout(() => {
-                    if (mapRef.current) {
-                        const bounds = L.latLngBounds([
-                            [startLat, startLng],
-                            [endLat, endLng]
-                        ]);
-                        mapRef.current.fitBounds(bounds, { padding: [20, 20] });
-                    }
-                }, 1000);
+                // Don't auto-scale map - let user control the view
             }
         }
     }, [routeLayer]); // Only depend on routeLayer
@@ -210,19 +192,22 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
         }
     }, [nearestHospital, userLocation, selectedHospital, onHospitalSelect]);
 
-    // Reset map view when search mode changes to prevent visual artifacts
-    useEffect(() => {
-        if (mapRef.current && userLocation) {
-            // Reset map view to user location when switching modes
-            setTimeout(() => {
-                mapRef.current.setView([userLocation.latitude, userLocation.longitude], 13);
-            }, 200);
-        }
-    }, [searchMode, userLocation]);
-
-    // Draw route to selected hospital when it changes (works in both modes)
+    // Focus map on selected hospital (only once when hospital is selected)
     useEffect(() => {
         if (selectedHospital && userLocation && mapRef.current) {
+            // Create bounds that include both user location and selected hospital
+            const bounds = L.latLngBounds([
+                [userLocation.latitude, userLocation.longitude],
+                [selectedHospital.lat, selectedHospital.lng]
+            ]);
+            
+            // Fit map to show both locations with padding
+            mapRef.current.fitBounds(bounds, { 
+                padding: [50, 50],
+                maxZoom: 15 // Don't zoom in too much
+            });
+            
+            // Draw the route
             const isNearest = nearestHospital && selectedHospital.name === nearestHospital.name;
             drawRoute(
                 userLocation.latitude, 
@@ -232,7 +217,7 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
                 isNearest
             );
         }
-    }, [selectedHospital, userLocation, nearestHospital, drawRoute]); // Added drawRoute dependency
+    }, [selectedHospital]); // Only depend on selectedHospital - focus only when selection changes
 
     // Handle hospital marker click
     const handleHospitalClick = (hospital) => {
