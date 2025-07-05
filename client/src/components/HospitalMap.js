@@ -35,35 +35,30 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
 
     // Find nearest hospital (hospitals are already sorted by distance from backend)
     useEffect(() => {
-        if (validHospitals.length > 0 && !searchMode) {
-            // Only set nearest hospital in location mode
+        if (validHospitals.length > 0) {
+            // Since hospitals are already sorted by distance, the first one is the nearest
             const nearest = validHospitals[0];
             setNearestHospital(nearest);
         } else {
-            // Clear nearest hospital when hospitals list is empty or in search mode
+            // Clear nearest hospital when hospitals list is empty
             setNearestHospital(null);
+            // Clear any existing routes
+            if (routeLayer && mapRef.current) {
+                mapRef.current.removeLayer(routeLayer);
+                setRouteLayer(null);
+            }
         }
-    }, [validHospitals, searchMode]);
+    }, [validHospitals, routeLayer]);
 
     // Clear routes when search mode changes - complete fresh start
     useEffect(() => {
-        // Clear any existing routes immediately
         if (routeLayer && mapRef.current) {
             mapRef.current.removeLayer(routeLayer);
             setRouteLayer(null);
         }
-        // Reset nearest hospital state to prevent route redrawing
+        // Also clear nearest hospital to prevent old routes from being redrawn
         setNearestHospital(null);
-    }, [searchMode, routeLayer]);
-
-    // Clear routes when hospitals list becomes empty (mode switching)
-    useEffect(() => {
-        if (hospitals.length === 0 && routeLayer && mapRef.current) {
-            mapRef.current.removeLayer(routeLayer);
-            setRouteLayer(null);
-            setNearestHospital(null);
-        }
-    }, [hospitals.length, routeLayer]);
+    }, [searchMode]);
 
     // Function to draw route between two points
     const drawRoute = async (startLat, startLng, endLat, endLng, isNearest = false) => {
@@ -160,21 +155,19 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
         }
     };
 
-    // Draw route to nearest hospital by default when hospitals are loaded (ONLY in location mode)
+    // Draw route to nearest hospital by default when hospitals are loaded (only if no hospital is selected and not in search mode transition)
     useEffect(() => {
         if (nearestHospital && userLocation && mapRef.current && !selectedHospital && !searchMode) {
-            // Only draw nearest route in location mode, with delay for clean slate
+            // Small delay to ensure clean slate after mode change
             setTimeout(() => {
-                if (!searchMode && nearestHospital) { // Double check mode hasn't changed
-                    drawRoute(
-                        userLocation.latitude, 
-                        userLocation.longitude, 
-                        nearestHospital.lat, 
-                        nearestHospital.lng,
-                        true
-                    );
-                }
-            }, 200);
+                drawRoute(
+                    userLocation.latitude, 
+                    userLocation.longitude, 
+                    nearestHospital.lat, 
+                    nearestHospital.lng,
+                    true
+                );
+            }, 100);
         }
     }, [nearestHospital, userLocation, selectedHospital, searchMode]);
 
@@ -182,18 +175,16 @@ const HospitalMap = ({ hospitals = [], userLocation, selectedHospital, onHospita
     useEffect(() => {
         if (selectedHospital && userLocation && mapRef.current) {
             const isNearest = nearestHospital && selectedHospital.name === nearestHospital.name && !searchMode;
-            // Delay to ensure clean slate after mode change
+            // Small delay to ensure clean slate after mode change
             setTimeout(() => {
-                if (selectedHospital) { // Double check selection hasn't changed
-                    drawRoute(
-                        userLocation.latitude, 
-                        userLocation.longitude, 
-                        selectedHospital.lat, 
-                        selectedHospital.lng,
-                        isNearest
-                    );
-                }
-            }, 200);
+                drawRoute(
+                    userLocation.latitude, 
+                    userLocation.longitude, 
+                    selectedHospital.lat, 
+                    selectedHospital.lng,
+                    isNearest
+                );
+            }, 100);
         }
     }, [selectedHospital, userLocation, nearestHospital, searchMode]);
 
