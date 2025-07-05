@@ -125,12 +125,6 @@ function Hospital() {
       setLoading(true);
       setError("");
       
-      // IMMEDIATELY clear all previous state to trigger route clearing
-      setSelectedHospital(null);
-      setNearestHospital(null);
-      setHospitals([]); // This triggers map clearing
-      setSearchMode(true); // Set mode BEFORE fetching data
-      
       // Include user location in the request if available for better sorting
       const params = new URLSearchParams();
       if (location?.latitude && location?.longitude) {
@@ -145,12 +139,13 @@ function Hospital() {
       
       const data = response.data;
       
-      // Set hospitals after a delay to ensure clean state
-      setTimeout(() => {
-        setHospitals(data.places || data);
-        localStorage.setItem('hospitals', JSON.stringify(data.places || data));
-        localStorage.setItem('searchCity', searchCity.trim());
-      }, 200);
+      // Clear previous state and set new data
+      setSelectedHospital(null);
+      setNearestHospital(null);
+      setSearchMode(true);
+      setHospitals(data.places || data);
+      localStorage.setItem('hospitals', JSON.stringify(data.places || data));
+      localStorage.setItem('searchCity', searchCity.trim());
       
     } catch (err) {
       console.error("Error searching hospitals by city:", err);
@@ -163,34 +158,17 @@ function Hospital() {
 
   // Function to clear search and return to location-based search
   const handleClearSearch = () => {
-    // IMMEDIATELY clear all state to trigger route clearing
     setSearchCity("");
     setError("");
     setSelectedHospital(null);
     setNearestHospital(null);
-    setHospitals([]); // This triggers map clearing
-    setSearchMode(false); // Set mode BEFORE fetching data
+    setSearchMode(false);
     localStorage.removeItem('searchCity');
     localStorage.removeItem('hospitals');
     
-    // Fetch location-based hospitals after delay to ensure clean state
+    // Trigger location-based search
     if (location?.latitude && location?.longitude) {
-      setTimeout(async () => {
-        try {
-          setLoading(true);
-          const response = await axios.get(`${process.env.REACT_APP_API_URL}api/hospital/nearby`, {
-            params: { lat: location.latitude, lng: location.longitude }
-          });
-          const data = response.data;
-          setHospitals(data.places);
-          localStorage.setItem('hospitals', JSON.stringify(data.places));
-          setError(null);
-        } catch (err) {
-          setError('Failed to fetch hospitals.');
-        } finally {
-          setLoading(false);
-        }
-      }, 200);
+      setHospitals([]); // This will trigger the useEffect to refetch
     }
   };
 
