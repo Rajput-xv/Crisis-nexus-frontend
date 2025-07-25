@@ -218,6 +218,25 @@ function Login() {
               Don't have an account? Create one
             </Button>
           </Box>
+
+          {/* Admin Access Link */}
+          <Box textAlign="center" sx={{ mt: 2 }}>
+            <Button
+              variant="text"
+              size="small"
+              onClick={() => navigate('/admin/login')}
+              sx={{ 
+                color: 'text.secondary',
+                fontSize: '0.8rem',
+                '&:hover': {
+                  backgroundColor: 'transparent',
+                  textDecoration: 'underline'
+                }
+              }}
+            >
+              Admin Access
+            </Button>
+          </Box>
         </form>
       </AuthCard>
     </AuthContainer>

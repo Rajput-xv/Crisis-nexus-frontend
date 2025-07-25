@@ -20,6 +20,7 @@
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^6.1.6",
     "@mui/material": "^6.1.6",
+    "@mui/x-date-pickers": "^6.19.0",
     "axios": "^0.27.2",
     "bootstrap": "^5.3.3",
     "cloudinary": "^1.21.0",

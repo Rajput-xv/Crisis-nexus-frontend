@@ -1,6 +1,6 @@
 import React from 'react';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -15,6 +15,16 @@ import Hospital from './pages/Hospital';
 import './App.css'; 
 import { LocationProvider } from './contexts/LocationContext';
 
+// Admin imports
+import {
+  AdminLogin,
+  AdminDashboard,
+  UsersManagement,
+  IncidentManagement,
+  EventManagement,
+  AdminLayout
+} from './admin';
+
 const theme = createTheme({
   // Customize your theme here
 });
@@ -23,26 +33,97 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AuthProvider>
-        <LocationProvider>
-          <div className="app-container">
-            <Navbar />
-            <div className="content-wrap">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/resources" element={<Resources />} />
-                <Route path="/events" element={<Events />} />
-                <Route path="/report" element={<IncidentReport />} />
-                <Route path="/hospital" element={<Hospital />} />
-              </Routes>
-            </div>
-            <Footer />
-          </div>
-        </LocationProvider>
-      </AuthProvider>
+      <Router>
+        <AuthProvider>
+          <LocationProvider>
+            <Routes>
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="users" element={<UsersManagement />} />
+                <Route path="incidents" element={<IncidentManagement />} />
+                <Route path="events" element={<EventManagement />} />
+              </Route>
+              
+              {/* Regular App Routes */}
+              <Route path="/" element={
+                <div className="app-container">
+                  <Navbar />
+                  <div className="content-wrap">
+                    <Home />
+                  </div>
+                  <Footer />
+                </div>
+              } />
+              <Route path="/login" element={
+                <div className="app-container">
+                  <Navbar />
+                  <div className="content-wrap">
+                    <Login />
+                  </div>
+                  <Footer />
+                </div>
+              } />
+              <Route path="/register" element={
+                <div className="app-container">
+                  <Navbar />
+                  <div className="content-wrap">
+                    <Register />
+                  </div>
+                  <Footer />
+                </div>
+              } />
+              <Route path="/dashboard" element={
+                <div className="app-container">
+                  <Navbar />
+                  <div className="content-wrap">
+                    <Dashboard />
+                  </div>
+                  <Footer />
+                </div>
+              } />
+              <Route path="/resources" element={
+                <div className="app-container">
+                  <Navbar />
+                  <div className="content-wrap">
+                    <Resources />
+                  </div>
+                  <Footer />
+                </div>
+              } />
+              <Route path="/events" element={
+                <div className="app-container">
+                  <Navbar />
+                  <div className="content-wrap">
+                    <Events />
+                  </div>
+                  <Footer />
+                </div>
+              } />
+              <Route path="/report" element={
+                <div className="app-container">
+                  <Navbar />
+                  <div className="content-wrap">
+                    <IncidentReport />
+                  </div>
+                  <Footer />
+                </div>
+              } />
+              <Route path="/hospital" element={
+                <div className="app-container">
+                  <Navbar />
+                  <div className="content-wrap">
+                    <Hospital />
+                  </div>
+                  <Footer />
+                </div>
+              } />
+            </Routes>
+          </LocationProvider>
+        </AuthProvider>
+      </Router>
     </ThemeProvider>
   );
 }
