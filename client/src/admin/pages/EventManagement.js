@@ -444,7 +444,14 @@ const EventManagement = () => {
                   label="Event Date & Time"
                   value={formData.date}
                   onChange={(newValue) => handleFormChange('date', newValue)}
-                  renderInput={(params) => <TextField {...params} fullWidth />}
+                  slots={{
+                    textField: TextField
+                  }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true
+                    }
+                  }}
                 />
               </Grid>
               
