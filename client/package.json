@@ -1,5 +1,4 @@
 {
-  "proxy": "https://crisis-nexus-server.vercel.app",
   "name": "client",
   "version": "1.0.0",
   "description": "",
@@ -8,8 +7,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "proxy": "node proxyServer.js"
+    "eject": "react-scripts eject"
   },
   "keywords": [],
   "author": "",

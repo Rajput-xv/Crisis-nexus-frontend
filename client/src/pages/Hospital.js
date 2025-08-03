@@ -147,7 +147,7 @@ function Hospital() {
       }
       
       const queryString = params.toString();
-      const url = `${process.env.REACT_APP_API_URL}api/hospital/city/${encodeURIComponent(searchCity.trim())}${queryString ? `?${queryString}` : ''}`;
+      const url = `${process.env.REACT_APP_API_URL}/api/hospital/city/${encodeURIComponent(searchCity.trim())}${queryString ? `?${queryString}` : ''}`;
       
       const response = await axios.get(url);
       
@@ -237,7 +237,7 @@ function Hospital() {
       const fetchData = async () => {
         try {
           setLoading(true);
-          const response = await axios.get(`${process.env.REACT_APP_API_URL}api/hospital/nearby`, {
+          const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/hospital/nearby`, {
             params: { lat: location.latitude, lng: location.longitude }
           });
           if (isMounted) {

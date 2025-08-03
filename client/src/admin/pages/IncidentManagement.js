@@ -76,7 +76,7 @@ const IncidentManagement = () => {
       params.append('limit', 10);
 
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}api/admin/incidents?${params}`,
+        `${process.env.REACT_APP_API_URL}/api/admin/incidents?${params}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -96,7 +96,7 @@ const IncidentManagement = () => {
     try {
       const token = localStorage.getItem('adminToken');
       await axios.put(
-        `${process.env.REACT_APP_API_URL}api/admin/incidents/${selectedIncident._id}/status`,
+        `${process.env.REACT_APP_API_URL}/api/admin/incidents/${selectedIncident._id}/status`,
         { status: newStatus },
         {
           headers: { Authorization: `Bearer ${token}` }

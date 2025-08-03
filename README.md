@@ -58,7 +58,7 @@ Crisis Nexus is a React-based web application that provides essential disaster m
 ## Technology Stack
 
 ### Frontend
-- **React 17.0.2** - Component-based UI framework
+- **React 18.3.1** - Component-based UI framework
 - **Material-UI (MUI)** - Modern React UI component library
 - **React Router DOM** - Client-side routing
 - **Styled Components** - CSS-in-JS styling solution

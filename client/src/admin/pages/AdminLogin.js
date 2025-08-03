@@ -70,7 +70,7 @@ const AdminLogin = () => {
       };
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}api/admin/login`,
+        `${process.env.REACT_APP_API_URL}/api/admin/login`,
         loginData
       );
 

@@ -54,7 +54,7 @@ const UsersManagement = () => {
     try {
       const token = localStorage.getItem('adminToken');
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}api/admin/users`,
+        `${process.env.REACT_APP_API_URL}/api/admin/users`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -72,7 +72,7 @@ const UsersManagement = () => {
     try {
       const token = localStorage.getItem('adminToken');
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}api/admin/users/${userId}/donations`,
+        `${process.env.REACT_APP_API_URL}/api/admin/users/${userId}/donations`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }

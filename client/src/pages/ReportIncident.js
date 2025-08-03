@@ -158,7 +158,7 @@ const ReportIncident = () => {
 
   const fetchIncidents = async () => {
     try {
-      const response = await axios.get(process.env.REACT_APP_API_URL+'api/report');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/report`);
       setIncidents(response.data);
     } catch (error) {
       console.error('Error fetching incidents:', error);

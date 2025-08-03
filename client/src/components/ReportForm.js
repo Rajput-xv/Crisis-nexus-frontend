@@ -240,7 +240,7 @@ const ReportForm = ({ onReportSubmitted }) => {
     };
   
     try {
-      await axios.post(process.env.REACT_APP_API_URL + 'api/report/', reportData, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/report/`, reportData, {
         headers: {
           'Content-Type': 'application/json'
         }

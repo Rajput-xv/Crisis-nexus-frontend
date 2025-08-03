@@ -105,7 +105,7 @@ function Register() {
     setIsSendingCode(true);
     try {
       await axios.post(
-        process.env.REACT_APP_API_URL + 'api/auth/send-verification',
+        `${process.env.REACT_APP_API_URL}/api/auth/send-verification`,
         { email }
       );
     } catch (err) {
@@ -124,7 +124,7 @@ function Register() {
     setIsVerifyingCode(true);
     try {
       await axios.post(
-        process.env.REACT_APP_API_URL + 'api/auth/verify-code',
+        `${process.env.REACT_APP_API_URL}/api/auth/verify-code`,
         { email, code: verificationCode } 
       );
       setIsEmailVerified(true);
@@ -146,7 +146,7 @@ function Register() {
     setLoading(true);
     try {
       await axios.post(
-        process.env.REACT_APP_API_URL + 'api/auth/register',
+        `${process.env.REACT_APP_API_URL}/api/auth/register`,
         { username, email, password, role }
       );
       navigate('/login');

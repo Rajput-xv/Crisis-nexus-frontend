@@ -87,7 +87,7 @@ const EventManagement = () => {
       setLoading(true);
       const token = localStorage.getItem('adminToken');
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}api/admin/events`,
+        `${process.env.REACT_APP_API_URL}/api/admin/events`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -118,7 +118,7 @@ const EventManagement = () => {
     try {
       const token = localStorage.getItem('adminToken');
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}api/admin/events/${event._id}`,
+        `${process.env.REACT_APP_API_URL}/api/admin/events/${event._id}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -152,7 +152,7 @@ const EventManagement = () => {
 
       if (isEditing) {
         await axios.put(
-          `${process.env.REACT_APP_API_URL}api/admin/events/${selectedEvent._id}`,
+          `${process.env.REACT_APP_API_URL}/api/admin/events/${selectedEvent._id}`,
           eventData,
           {
             headers: { Authorization: `Bearer ${token}` }
@@ -161,7 +161,7 @@ const EventManagement = () => {
         setSuccess('Event updated successfully');
       } else {
         await axios.post(
-          `${process.env.REACT_APP_API_URL}api/admin/events`,
+          `${process.env.REACT_APP_API_URL}/api/admin/events`,
           eventData,
           {
             headers: { Authorization: `Bearer ${token}` }
@@ -183,7 +183,7 @@ const EventManagement = () => {
     try {
       const token = localStorage.getItem('adminToken');
       await axios.delete(
-        `${process.env.REACT_APP_API_URL}api/admin/events/${selectedEvent._id}`,
+        `${process.env.REACT_APP_API_URL}/api/admin/events/${selectedEvent._id}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
