@@ -171,7 +171,18 @@ const AdminLogin = () => {
           </Button>
         </form>
 
-        <Box mt={3} textAlign="center">
+        <Box mt={2} textAlign="center">
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => navigate('/login')}
+            sx={{ mb: 2 }}
+          >
+            Go to User Login
+          </Button>
+        </Box>
+
+        <Box mt={1} textAlign="center">
           <Typography variant="caption" color="text.secondary">
             Authorized access only. All activities are logged.
           </Typography>

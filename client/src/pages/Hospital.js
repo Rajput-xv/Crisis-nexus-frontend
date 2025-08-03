@@ -499,6 +499,7 @@ function Hospital() {
                           </Box>
                         </Box>
                       }
+                      secondaryTypographyProps={{ component: 'div' }}
                     />
                   </HospitalItem>
                 );

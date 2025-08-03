@@ -33,19 +33,17 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <AuthProvider>
-          <LocationProvider>
-            <Routes>
-              {/* Admin Routes */}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="users" element={<UsersManagement />} />
-                <Route path="incidents" element={<IncidentManagement />} />
-                <Route path="events" element={<EventManagement />} />
-              </Route>
+      <LocationProvider>
+        <Routes>
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<UsersManagement />} />
+            <Route path="incidents" element={<IncidentManagement />} />
+            <Route path="events" element={<EventManagement />} />
+          </Route>
               
               {/* Regular App Routes */}
               <Route path="/" element={
@@ -122,8 +120,6 @@ function App() {
               } />
             </Routes>
           </LocationProvider>
-        </AuthProvider>
-      </Router>
     </ThemeProvider>
   );
 }

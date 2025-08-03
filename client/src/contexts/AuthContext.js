@@ -32,13 +32,20 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, { email, password });
-    localStorage.setItem('token', response.data.token);
-    const userResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/user`, {
-      headers: { Authorization: `Bearer ${response.data.token}` }
-    });
-    setUser(userResponse.data);
-    // setUser(response.data.user);
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, { email, password });
+      localStorage.setItem('token', response.data.token);
+      const userResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/user`, {
+        headers: { Authorization: `Bearer ${response.data.token}` }
+      });
+      setUser(userResponse.data);
+      return response.data;
+    } catch (error) {
+      console.error('Login error:', error.response?.data || error.message);
+      // Extract meaningful error message
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Login failed';
+      throw new Error(errorMessage);
+    }
   };
 
   const logout = () => {
