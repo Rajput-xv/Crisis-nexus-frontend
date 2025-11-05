@@ -11,6 +11,8 @@ import Resources from './pages/Resources';
 import Events from './pages/Events';
 import IncidentReport from './pages/ReportIncident';
 import Hospital from './pages/Hospital';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import './App.css'; 
 import { LocationProvider } from './contexts/LocationContext';
 
@@ -68,6 +70,24 @@ function App() {
                   <Navbar />
                   <div className="content-wrap">
                     <Register />
+                  </div>
+                  <Footer />
+                </div>
+              } />
+              <Route path="/forgot-password" element={
+                <div className="app-container">
+                  <Navbar />
+                  <div className="content-wrap">
+                    <ForgotPassword />
+                  </div>
+                  <Footer />
+                </div>
+              } />
+              <Route path="/reset-password" element={
+                <div className="app-container">
+                  <Navbar />
+                  <div className="content-wrap">
+                    <ResetPassword />
                   </div>
                   <Footer />
                 </div>

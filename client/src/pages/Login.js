@@ -219,6 +219,25 @@ function Login() {
             </Button>
           </Box>
 
+          {/* Forgot Password Link */}
+          <Box textAlign="center" sx={{ mt: 1 }}>
+            <Button
+              variant="text"
+              color="primary"
+              onClick={() => navigate('/forgot-password')}
+              sx={{ 
+                fontWeight: 500,
+                fontSize: '0.9rem',
+                '&:hover': {
+                  backgroundColor: 'transparent',
+                  textDecoration: 'underline'
+                }
+              }}
+            >
+              Forgot Password?
+            </Button>
+          </Box>
+
           {/* Admin Access Link */}
           <Box textAlign="center" sx={{ mt: 2 }}>
             <Button
