@@ -34,13 +34,18 @@ function Dashboard() {
     pointsEarned: 0,
     level: 1,
     totalDonations: 0,
-    currency: 'USD'
+    currency: 'INR'
   });
   const [latestEvents, setLatestEvents] = useState([]);
   const [donations, setDonations] = useState([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      if (!user || !user._id) {
+        console.error('User not loaded');
+        return;
+      }
+
       try {
         const [statsResponse, eventsResponse, registrationsResponse, donationsResponse, resourcesResponse] = await Promise.all([
           api.get('api/user/stat'), 
@@ -54,7 +59,7 @@ function Dashboard() {
           ...statsResponse.data,
           eventsAttended: registrationsResponse.data.length,
           totalDonations: donationsResponse.data.reduce((total, donation) => total + donation.amount, 0),
-          currency: donationsResponse.data.length > 0 ? donationsResponse.data[0].currency : 'INR', // Set currency from donations
+          currency: donationsResponse.data.length > 0 ? donationsResponse.data[0].currency : 'INR',
           resourcesContributed: resourcesResponse.data.totalQuantity
         });
         setLatestEvents(eventsResponse.data.slice(0, 5)); // Limit to top 5 latest events
@@ -65,7 +70,7 @@ function Dashboard() {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [user]);
 
   const handleViewDetails = (eventId) => {
     navigate(`/events/`);

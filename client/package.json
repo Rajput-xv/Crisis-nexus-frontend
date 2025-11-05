@@ -41,6 +41,13 @@
     "recharts": "^3.1.0",
     "styled-components": "^6.1.16"
   },
+  "overrides": {
+    "nth-check": "^2.1.1",
+    "postcss": "^8.4.31",
+    "css-select": "^5.1.0",
+    "svgo": "^3.0.0",
+    "webpack-dev-server": "^4.15.1"
+  },
   "browserslist": {
     "production": [
       ">0.2%",

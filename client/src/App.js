@@ -1,6 +1,6 @@
 import React from 'react';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -10,7 +10,6 @@ import Dashboard from './pages/Dashboard';
 import Resources from './pages/Resources';
 import Events from './pages/Events';
 import IncidentReport from './pages/ReportIncident';
-import { AuthProvider } from './contexts/AuthContext';
 import Hospital from './pages/Hospital';
 import './App.css'; 
 import { LocationProvider } from './contexts/LocationContext';
